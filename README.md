@@ -89,6 +89,15 @@ selects.
 
 ## Files
 
-- `index.html` — the entire application: markup, styles, logic, charts.
+- `index.html` — the entire application in English: markup, styles, logic, charts.
+- `index.uk.html` — the Ukrainian version, published separately. Same code and
+  same data model; only user-facing text and the number locale differ.
 
-No dependencies, no build. Open it in a browser and it runs.
+No dependencies, no build. Open either file in a browser and it runs.
+
+## Keeping the two languages in sync
+
+They are independent files, not a translation layer — a change to one does not
+reach the other. When you change behaviour, change both, and keep the element
+ids, CSS class names and database field names identical between them. That
+invariant is what lets the same data model and the same checks serve both.
