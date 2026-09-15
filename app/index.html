@@ -139,6 +139,7 @@ h3{font-size:16px}
 .tile .hint{font-size:12px;color:var(--muted)}
 .tile.lead{border-left:3px solid var(--credit)}
 .tile.debtline{border-left:3px solid var(--debit)}
+.tile.needline{border-left:3px solid var(--ink)}
 
 /* ─────────── картки й таблиці ─────────── */
 .card{
@@ -146,6 +147,7 @@ h3{font-size:16px}
   padding:18px;box-shadow:var(--shadow);
 }
 .card + .card{margin-top:14px}
+.card[hidden]{display:none}
 .card-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .card-head .sub{font-size:12.5px;color:var(--muted);margin-left:auto}
 
@@ -485,6 +487,7 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
     </div>
 
     <div class="tiles" id="tiles"></div>
+    <div class="analysis" id="needNote" style="margin-top:12px"></div>
 
     <div class="grid-2" style="margin-top:14px">
       <div class="card">
@@ -525,6 +528,15 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
           <span class="sub" id="cushSub"></span>
         </div>
         <div class="chartbox" id="cushBox"></div>
+      </div>
+
+      <div class="card" id="goalsCard" hidden>
+        <div class="card-head">
+          <h2>Цілі</h2>
+          <span class="sub" id="goalsSub"></span>
+        </div>
+        <div class="chartbox" id="goalsBox"></div>
+        <div class="analysis" id="goalsNote"></div>
       </div>
     </div>
   </section>
@@ -1388,6 +1400,79 @@ function drawFlow(box, rows){
   });
 }
 
+/* ── цілі: скільки зібрано з потрібного ── */
+function drawGoals(box, goals){
+  const W = boxWidth(box), narrow = W < 430;
+  const rowH = narrow ? 44 : 42, PT = 8, PB = 8;
+  const PL = narrow ? Math.round(W*0.30) : Math.min(150, Math.round(W*0.26)),
+        PR = narrow ? 78 : Math.min(120, Math.round(W*0.20));
+  const H = PT + PB + goals.length*rowH;
+  const { svg, tip } = chartFrame(box, W, H);
+
+  const max = Math.max(1, ...goals.map(g => Math.max(g.target, g.saved)));
+  const track = W - PL - PR;
+  const col = 'var(--good)';
+  const nf = v => (v >= 100000 ? compactFmt.format(v) : numFmt.format(Math.round(v)));
+  const textW = v => 7.2 * (nf(v).length + 2);
+
+  goals.forEach((g, i) => {
+    const y = PT + i*rowH;
+    const name = svgEl('text', { x:PL-12, y:y+rowH/2+4, 'text-anchor':'end' });
+    name.style.fill = 'var(--ink-2)';
+    name.textContent = fitText(svg, g.name, PL - 16);
+    svg.appendChild(name);
+
+    const tw = Math.max(g.target > 0 ? 3 : 0, track * (g.target/max));
+    const sw = Math.max(g.saved  > 0 ? 3 : 0, track * (g.saved /max));
+    [[tw, 0.28], [sw, 1]].forEach(([w, op]) => {
+      if(w <= 0) return;
+      svg.appendChild(svgEl('rect', { x:PL, y:y+8, width:w, height:rowH-24, rx:4,
+        fill:col, opacity:op }));
+    });
+
+    const box2 = (v, end, fits) => fits
+      ? { fits:true,  x: PL+end-8, a: PL+end-8-textW(v), b: PL+end-8 }
+      : { fits:false, x: PL+end+8, a: PL+end+8, b: PL+end+8+textW(v) };
+    let bs = g.saved > 0 ? box2(g.saved, sw, sw >= textW(g.saved)+16) : null;
+    let bt = null;
+    if(g.target > 0){
+      const free = !bs || (PL+tw-8-textW(g.target)) > bs.b + 14;
+      bt = box2(g.target, tw, tw >= textW(g.target)+16 && free);
+    }
+    if(bs && bt && !bs.fits && !bt.fits && bt.a < bs.b + 14) bs = null;
+    [[bs, g.saved, '#fff'], [bt, g.target, col]].forEach(([bx, v, inColor]) => {
+      if(!bx) return;
+      const t = svgEl('text', bx.fits
+        ? { x:bx.x, y:y+rowH/2+4, 'text-anchor':'end', class:'val' }
+        : { x:bx.x, y:y+rowH/2+4, class:'val' });
+      t.style.fill = bx.fits ? inColor : col;
+      t.textContent = nf(v) + ' €';
+      svg.appendChild(t);
+    });
+
+    if(!narrow){
+      const pct = g.target > 0 ? Math.round(g.saved/g.target*100) : 0;
+      const t = svgEl('text', { x:W-8, y:y+rowH/2+4, 'text-anchor':'end', class:'val' });
+      t.style.fill = 'var(--muted)';
+      t.textContent = pct + '%';
+      svg.appendChild(t);
+    }
+
+    const need = Math.max(0, g.target - g.saved);
+    const when = g.monthly > 0 ? ymLabelLong(ymAdd(ymNow(), Math.ceil(need/g.monthly))) : '—';
+    const hit = svgEl('rect', { x:0, y:y, width:W, height:rowH, fill:'transparent' });
+    hit.addEventListener('mousemove', ev => showTip(box, tip, ev.clientX,
+      '<div class="t">'+esc(g.name)+'</div>'
+      +'<div class="row"><span class="k">потрібно</span><span class="v">'+eur(g.target)+'</span></div>'
+      +'<div class="row"><span class="k">зібрано</span><span class="v">'+eur(g.saved)+'</span></div>'
+      +'<div class="row"><span class="k">лишилось</span><span class="v">'+eur(need)+'</span></div>'
+      +'<div class="row" style="margin-top:4px"><span class="k">на місяць</span><span class="v">'+eur(g.monthly)+'</span></div>'
+      +'<div class="row"><span class="k">буде готово</span><span class="v">'+(need<=0?'готово':when)+'</span></div>'));
+    hit.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    svg.appendChild(hit);
+  });
+}
+
 /* ── лінія з заливкою: борг або подушка ── */
 function drawLine(box, pts, opts){
   opts = opts || {};
@@ -1701,6 +1786,10 @@ function renderOverview(){
   const saved = Number(S.settings.cushionSaved) || 0;
   const pct = proj.target > 0 ? clamp(saved/proj.target*100, 0, 100) : 0;
 
+  const goalsMonthly = S.goals.reduce((a,g) => a + (Number(g.monthly)||0), 0);
+  const need = { plan: exp.plan, goals: goalsMonthly, total: exp.plan + goalsMonthly };
+  need.gap = need.total - inc.plan;
+
   $('#tiles').innerHTML = [
     '<div class="tile lead"><span class="eyebrow">Надходження, план</span>'
       +'<span class="val" style="color:var(--credit)">'+eur(inc.plan)+'</span>'
@@ -1710,11 +1799,24 @@ function renderOverview(){
       +'<span class="val" style="color:var(--debit)">'+eur(exp.plan)+'</span>'
       +'<span class="hint">факт '+eur(exp.fact)+' · <span class="'+diffClass(exp.diff,'expense')+'">'
         +signed(exp.diff)+'</span></span></div>',
+    '<div class="tile needline"><span class="eyebrow">Потрібно заробляти</span>'
+      +'<span class="val">'+eur(need.total)+'</span>'
+      +'<span class="hint">витрати '+eur(need.plan)+(need.goals > 0 ? ' + цілі '+eur(need.goals) : '')
+        +'</span></div>',
     '<div class="tile"><span class="eyebrow">Подушка</span>'
       +'<span class="val">'+eur(saved)+'</span>'
       +'<span class="hint">'+(proj.target>0 ? Math.round(pct)+'% від цілі '+eur(proj.target)
         : 'ціль з\'явиться, коли будуть плани або витрати')+'</span></div>',
   ].join('');
+
+  $('#needNote').innerHTML = need.total <= 0
+    ? 'Постав плани витрат — і тут з\'явиться, скільки треба заробляти, щоб їх закрити.'
+    : 'Щоб закрити всі витрати' + (need.goals > 0 ? ' і відкладати на цілі' : '')
+      + ', потрібно <b>' + eur(need.total) + '</b> на місяць. Заплановано надходжень <b>'
+      + eur(inc.plan) + '</b> — '
+      + (need.gap > 0
+          ? 'бракує <b class="over">' + eur(need.gap) + '</b>, стільки треба додати до заробітку.'
+          : 'вистачає, вільними лишається <b class="under">' + eur(-need.gap) + '</b>.');
 
   $('#expSub2').textContent = ymLabelLong(ym);
   $('#incSub2').textContent = ymLabelLong(ym);
@@ -1747,6 +1849,21 @@ function renderOverview(){
       + (fut.length
         ? 'Прозорі стовпчики — план; попереду ' + futTxt + '.'
         : '');
+
+  const goals = S.goals.slice().sort((a,b) => (b.target||0) - (a.target||0));
+  $('#goalsCard').hidden = !goals.length;
+  if(goals.length){
+    const perMonth = goals.reduce((s,g) => s + (Number(g.monthly)||0), 0);
+    const need = goals.reduce((s,g) => s + Math.max(0, g.target - g.saved), 0);
+    $('#goalsSub').textContent = goals.length + (goals.length === 1 ? ' ціль' :
+      (goals.length < 5 ? ' цілі' : ' цілей'));
+    drawGoals($('#goalsBox'), goals);
+    const done = goals.filter(g => g.saved >= g.target && g.target > 0).length;
+    $('#goalsNote').innerHTML = 'Лишилось зібрати <b>' + eur(need) + '</b>, відкладаємо <b>'
+      + eur(perMonth) + '</b> на місяць'
+      + (perMonth > 0 ? ' — це ще <b>' + Math.ceil(need/perMonth) + '</b> міс' : '')
+      + '.' + (done ? ' Досягнуто: <b>' + done + '</b>.' : '');
+  }
 
   $('#cushSub').textContent = proj.reachedYm
     ? 'ціль досягнута у ' + ymLabelLong(proj.reachedYm)
