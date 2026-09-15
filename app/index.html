@@ -993,6 +993,15 @@ async function removeTx(id){
   if(error) throw new Error(dbError(error));
   await loadAll();
 }
+async function saveGoal(g){
+  guard();
+  const { error } = await sb.from('goals').insert({
+    household_id: S.household.id,
+    name: g.name, target: g.target, saved: g.saved, monthly: g.monthly,
+  });
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
 async function removeRow(table, id){
   guard();
   const { error } = await sb.from(table).delete().eq('id', id);
