@@ -434,44 +434,39 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
 
     <div class="tiles" id="tiles"></div>
 
-    <div class="card" style="margin-top:14px">
-      <div class="card-head">
-        <h2>Витрати: план і факт</h2>
-        <span class="sub" id="expSub"></span>
-      </div>
-      <div class="chartbox" id="expBox"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <h2>Надходження: план і факт</h2>
-        <span class="sub" id="incSub"></span>
-      </div>
-      <div class="chartbox" id="incBox"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <h2>Надходження проти витрат</h2>
-        <span class="sub" id="flowSub"></span>
-      </div>
-      <div class="chartbox" id="flowBox"></div>
-      <div class="legend">
-        <span><i style="background:var(--credit)"></i>Надходження, факт</span>
-        <span><i style="background:var(--debit)"></i>Витрати, факт</span>
-        <span><i style="background:var(--credit);opacity:.28"></i><i style="background:var(--debit);opacity:.28;margin-left:-4px"></i>Прозорі — план</span>
-      </div>
-      <div class="analysis" id="flowNote"></div>
-    </div>
-
-    <div class="grid-2">
+    <div class="grid-2" style="margin-top:14px">
       <div class="card">
         <div class="card-head">
-          <h2>Структура витрат</h2>
-          <span class="sub" id="catSub"></span>
+          <h2>Витрати: план і факт</h2>
+          <span class="sub" id="expSub"></span>
         </div>
-        <div class="chartbox" id="catBox"></div>
+        <div class="chartbox" id="expBox"></div>
       </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Надходження: план і факт</h2>
+          <span class="sub" id="incSub"></span>
+        </div>
+        <div class="chartbox" id="incBox"></div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:14px">
+      <div class="card">
+        <div class="card-head">
+          <h2>Надходження проти витрат</h2>
+          <span class="sub" id="flowSub"></span>
+        </div>
+        <div class="chartbox" id="flowBox"></div>
+        <div class="legend">
+          <span><i style="background:var(--credit)"></i>Надходження, факт</span>
+          <span><i style="background:var(--debit)"></i>Витрати, факт</span>
+          <span><i style="background:var(--credit);opacity:.28"></i><i style="background:var(--debit);opacity:.28;margin-left:-4px"></i>Прозорі — план</span>
+        </div>
+        <div class="analysis" id="flowNote"></div>
+      </div>
+
       <div class="card">
         <div class="card-head">
           <h2>Формування подушки</h2>
@@ -1277,7 +1272,7 @@ function drawFlow(box, rows){
       marks.forEach(m => {
         const t = svgEl('text', { x: x0 + bw/2, y: Math.max(9, m.y),
           'text-anchor':'middle', class:'val' });
-        t.setAttribute('fill', m.col);
+        t.style.fill = m.col;
         t.setAttribute('opacity', m.op);
         t.textContent = barFmt(m.v);
         svg.appendChild(t);
@@ -1331,7 +1326,7 @@ function drawLine(box, pts, opts){
     svg.appendChild(svgEl('line', { x1:PL, x2:W-PR, y1:ty, y2:ty,
       stroke:'var(--good)', 'stroke-width':1.5, 'stroke-dasharray':'5 4' }));
     const tl = svgEl('text', { x:W-PR, y:ty-7, 'text-anchor':'end', class:'val' });
-    tl.setAttribute('fill','var(--good)');
+    tl.style.fill = 'var(--good)';
     tl.textContent = 'ціль ' + eur(opts.target);
     svg.appendChild(tl);
   }
@@ -1379,49 +1374,16 @@ function drawLine(box, pts, opts){
   svg.appendChild(hit);
 }
 
-/* ── горизонтальні смуги: структура витрат ── */
-function drawCats(box, rows){
-  if(!rows.length){ box.innerHTML = '<div class="empty">Ще немає витрат, щоб показати структуру.</div>'; return; }
-  const W = boxWidth(box), narrow = W < 560;
-  const rowH = narrow ? 28 : 30, PT = 6, PB = 6;
-  const PL = narrow ? Math.round(W*0.30) : 150, PR = narrow ? 74 : 104;
-  const H = PT + PB + rows.length*rowH;
-  const { svg, tip } = chartFrame(box, W, H);
-  const max = Math.max(...rows.map(r => r.value)) || 1;
-  const total = rows.reduce((s,r) => s+r.value, 0) || 1;
-
-  rows.forEach((r,i) => {
-    const y = PT + i*rowH;
-    const w = Math.max(3, (W-PL-PR) * (r.value/max));
-    const name = svgEl('text', { x:PL-12, y:y+rowH/2+4, 'text-anchor':'end' });
-    name.setAttribute('fill','var(--ink-2)');
-    const maxChars = narrow ? 11 : 20;
-    name.textContent = r.label.length > maxChars ? r.label.slice(0,maxChars-1)+'…' : r.label;
-    svg.appendChild(name);
-    svg.appendChild(svgEl('rect', { x:PL, y:y+6, width:w, height:rowH-14, rx:4, fill:r.color }));
-    const v = svgEl('text', { x:PL+w+10, y:y+rowH/2+4, class:'val' });
-    v.textContent = narrow ? eur(r.value) : eur(r.value) + '   ' + Math.round(r.value/total*100) + '%';
-    svg.appendChild(v);
-
-    const hit = svgEl('rect', { x:0, y:y, width:W, height:rowH, fill:'transparent' });
-    hit.addEventListener('mousemove', ev => showTip(box, tip, ev.clientX,
-      '<div class="t">'+esc(r.label)+'</div>'
-      +'<div class="row"><span class="k">сума</span><span class="v">'+eur2(r.value)+'</span></div>'
-      +'<div class="row"><span class="k">частка</span><span class="v">'+(r.value/total*100).toFixed(1)+'%</span></div>'));
-    hit.addEventListener('mouseleave', () => tip.classList.remove('on'));
-    svg.appendChild(hit);
-  });
-}
-
 /* ── план проти факту: смуга факту і позначка плану ── */
 function drawPlanFact(box, rows, kind){
   if(!rows.length){
     box.innerHTML = '<div class="empty">Ще немає ні планів, ні записів за цей місяць.</div>';
     return;
   }
-  const W = boxWidth(box), narrow = W < 560;
+  const W = boxWidth(box), narrow = W < 430;
   const rowH = narrow ? 42 : 40, PT = 8, PB = 8, GAP = 14;
-  const PL = narrow ? Math.round(W*0.30) : 170, PR = narrow ? 78 : 250;
+  const PL = narrow ? Math.round(W*0.30) : Math.min(150, Math.round(W*0.26)),
+        PR = narrow ? 84 : Math.min(120, Math.round(W*0.20));
 
   // підсумковий рядок «Разом» — окремою смугою внизу
   const tot = rows.reduce((a, r) => { a.plan += r.plan; a.fact += r.fact; return a; },
@@ -1445,44 +1407,55 @@ function drawPlanFact(box, rows, kind){
       svg.appendChild(svgEl('line', { class:'grid', x1:PL-8, x2:W-8, y1:y-GAP/2, y2:y-GAP/2 }));
     }
     const name = svgEl('text', { x:PL-12, y:y+rowH/2+4, 'text-anchor':'end' });
-    name.setAttribute('fill', r.total ? 'var(--ink)' : 'var(--ink-2)');
+    name.style.fill = r.total ? 'var(--ink)' : 'var(--ink-2)';
     if(r.total) name.setAttribute('font-weight','600');
     const maxChars = narrow ? 11 : 20;
     name.textContent = r.group.name.length > maxChars
       ? r.group.name.slice(0, maxChars-1)+'…' : r.group.name;
     svg.appendChild(name);
 
-    // доріжка плану
-    const pw = Math.max(0, track * (r.plan/scale));
-    if(pw > 0){
-      svg.appendChild(svgEl('rect', { x:PL, y:y+9, width:pw, height:rowH-26, rx:3,
-        fill:'var(--rule)', 'fill-opacity':0.9 }));
-    }
-    // смуга факту
+    // план — прозора смуга, факт — суцільна поверх неї
+    const pw = Math.max(r.plan > 0 ? 3 : 0, track * (r.plan/scale));
     const fw = Math.max(r.fact > 0 ? 3 : 0, track * (r.fact/scale));
-    if(fw > 0){
-      svg.appendChild(svgEl('rect', { x:PL, y:y+7, width:fw, height:rowH-22, rx:4, fill:barColor }));
-    }
-    // позначка плану
+    const nf = v => (v >= 100000 ? compactFmt.format(v) : numFmt.format(Math.round(v)));
+    [[pw, 0.28], [fw, 1]].forEach(([w, op]) => {
+      if(w <= 0) return;
+      svg.appendChild(svgEl('rect', { x:PL, y:y+7, width:w, height:rowH-22, rx:4,
+        fill:barColor, opacity:op }));
+    });
+
+    // цифри в зоні своєї смуги: факт — на суцільній, план — на прозорій
+    const textW = v => 7.2 * (nf(v).length + 2);
+    const box = (v, barEnd, fits) => fits
+      ? { fits:true,  x: PL+barEnd-8, a: PL+barEnd-8-textW(v), b: PL+barEnd-8 }
+      : { fits:false, x: PL+barEnd+8, a: PL+barEnd+8, b: PL+barEnd+8+textW(v) };
+
+    let bf = r.fact > 0 ? box(r.fact, fw, fw >= textW(r.fact)+16) : null;
+    let bp = null;
     if(r.plan > 0){
-      svg.appendChild(svgEl('line', { x1:PL+pw, x2:PL+pw, y1:y+3, y2:y+rowH-9,
-        stroke:'var(--ink)', 'stroke-width':2 }));
+      const room = pw >= textW(r.plan)+16;
+      const free = !bf || (PL+pw-8-textW(r.plan)) > bf.b + 6;
+      bp = box(r.plan, pw, room && free);
     }
+    // обидва не влізли і налізли один на одного — лишаємо план
+    if(bf && bp && !bf.fits && !bp.fits && bp.a < bf.b + 6) bf = null;
 
-    // цифри праворуч від смуги: факт із плану
-    const nf = narrow ? (v => compactFmt.format(v)) : (v => numFmt.format(Math.round(v)));
-    const sum = svgEl('text', { x: narrow ? W-6 : W-118, y:y+rowH/2+4,
-      'text-anchor':'end', class:'val' });
-    sum.setAttribute('fill', r.fact > 0 ? 'var(--ink)' : 'var(--muted)');
-    if(r.total) sum.setAttribute('font-weight','600');
-    sum.textContent = nf(r.fact) + ' / ' + nf(r.plan) + ' €';
-    svg.appendChild(sum);
+    [[bf, r.fact, '#fff'], [bp, r.plan, barColor]].forEach(([b, v, inColor]) => {
+      if(!b) return;
+      const t = svgEl('text', b.fits
+        ? { x:b.x, y:y+rowH/2+4, 'text-anchor':'end', class:'val' }
+        : { x:b.x, y:y+rowH/2+4, class:'val' });
+      t.style.fill = b.fits ? inColor : barColor;
+      if(r.total) t.setAttribute('font-weight','600');
+      t.textContent = nf(v) + ' €';
+      svg.appendChild(t);
+    });
 
+    // частка групи в загальному плані
     if(!narrow){
-      const over = kind === 'income' ? r.diff < 0 : r.diff > 0;
       const t = svgEl('text', { x:W-8, y:y+rowH/2+4, 'text-anchor':'end', class:'val' });
-      t.setAttribute('fill', r.diff === 0 ? 'var(--muted)' : (over ? 'var(--crit)' : 'var(--good)'));
-      t.textContent = (r.diff > 0 ? '+' : '') + numFmt.format(Math.round(r.diff)) + ' €';
+      t.style.fill = 'var(--muted)';
+      t.textContent = (!r.total && tot.plan > 0) ? Math.round(r.plan/tot.plan*100) + '%' : '';
       svg.appendChild(t);
     }
 
@@ -1491,15 +1464,18 @@ function drawPlanFact(box, rows, kind){
       '<div class="t">'+esc(r.group.name)+'</div>'
       +'<div class="row"><span class="k">план</span><span class="v">'+eur(r.plan)+'</span></div>'
       +'<div class="row"><span class="k">факт</span><span class="v">'+eur(r.fact)+'</span></div>'
-      +'<div class="row" style="margin-top:4px"><span class="k">різниця</span><span class="v">'
-        +(r.diff>0?'+':'')+eur(r.diff)+'</span></div>'));
+      +'<div class="row"><span class="k">різниця</span><span class="v">'
+        +(r.diff>0?'+':'')+eur(r.diff)+'</span></div>'
+      +(tot.plan > 0 && !r.total
+        ? '<div class="row" style="margin-top:4px"><span class="k">частка в плані</span><span class="v">'
+          +Math.round(r.plan/tot.plan*100)+'%</span></div>'
+        : '')));
     hit.addEventListener('mouseleave', () => tip.classList.remove('on'));
     svg.appendChild(hit);
   });
 }
 
 /* ══════════════════ відмальовка ══════════════════ */
-const CAT_VARS = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)','var(--c7)'];
 
 const signed = v => (v > 0 ? '+' : '') + eur(v);
 function diffClass(diff, kind){
@@ -1620,20 +1596,6 @@ function flowRows(){
   return rows;
 }
 
-function catRows(){
-  const sum = summary(S.month, 'expense');
-  let rows = sum.rows.filter(r => r.fact > 0)
-    .map(r => ({ label: r.group.name, value: r.fact }))
-    .sort((a,b) => b.value - a.value);
-  if(sum.orphan > 0) rows.push({ label:'Без статті', value: sum.orphan });
-  if(rows.length > 7){
-    const rest = rows.slice(6).reduce((s,r) => s + r.value, 0);
-    rows = rows.slice(0,6).concat([{ label:'Решта груп', value: rest }]);
-  }
-  rows.forEach((r,i) => r.color = CAT_VARS[i]);
-  return rows;
-}
-
 function renderOverview(){
   const ym = S.month;
   $('#mLabel').textContent = ymLabelLong(ym);
@@ -1667,12 +1629,12 @@ function renderOverview(){
 
   $('#expSub2').textContent = ymLabelLong(ym);
   $('#incSub2').textContent = ymLabelLong(ym);
-  $('#expSub').textContent = exp.plan > 0 ? 'виконання плану ' + Math.round(exp.pct) + '%' : '';
+  $('#expSub').textContent = '';
   drawPlanFact($('#expBox'), exp.rows, 'expense');
   $('#expNote').innerHTML = analysisText(exp, 'expense');
   $('#expTable').innerHTML = summaryTable(exp, 'expense');
 
-  $('#incSub').textContent = inc.plan > 0 ? 'виконання плану ' + Math.round(inc.pct) + '%' : '';
+  $('#incSub').textContent = '';
   drawPlanFact($('#incBox'), inc.rows, 'income');
   $('#incNote').innerHTML = analysisText(inc, 'income');
   $('#incTable').innerHTML = summaryTable(inc, 'income');
@@ -1696,10 +1658,6 @@ function renderOverview(){
       + (fut.length
         ? 'Прозорі стовпчики — план; попереду ' + futTxt + '.'
         : '');
-
-  const cats = catRows();
-  $('#catSub').textContent = cats.length ? ymLabelLong(ym) : '';
-  drawCats($('#catBox'), cats);
 
   $('#cushSub').textContent = proj.reachedYm
     ? 'ціль досягнута у ' + ymLabelLong(proj.reachedYm)
