@@ -1248,6 +1248,22 @@ function chartFrame(box, w, h){
   box.appendChild(tip);
   return { svg, tip };
 }
+/** Ширина підпису в пікселях — щоб залишити під нього рівно стільки місця. */
+function textWidth(svg, str, cls){
+  const t = svgEl('text', cls ? { class: cls } : {});
+  t.textContent = str;
+  svg.appendChild(t);
+  const w = t.getComputedTextLength ? t.getComputedTextLength() : str.length * 7;
+  svg.removeChild(t);
+  return w;
+}
+/** Обрізає назву так, щоб вона вмістилась у відведену ширину. */
+function fitText(svg, str, maxW, cls){
+  if(textWidth(svg, str, cls) <= maxW) return str;
+  let out = str;
+  while(out.length > 1 && textWidth(svg, out + '…', cls) > maxW) out = out.slice(0, -1);
+  return out + '…';
+}
 function showTip(box, tip, clientX, html){
   tip.innerHTML = html;
   tip.classList.add('on');
@@ -1255,9 +1271,19 @@ function showTip(box, tip, clientX, html){
   const w = tip.offsetWidth || 150;
   let x = clientX - r.left + 12;
   if(x + w > r.width) x = clientX - r.left - w - 12;
-  tip.style.left = Math.max(0, x) + 'px';
+  x = Math.min(Math.max(0, x), Math.max(0, r.width - w));
+  tip.style.left = x + 'px';
   tip.style.top = '8px';
 }
+/** Відступ зліва, щоб найдовший підпис осі не виліз за межі картки. */
+function axisPad(svg, max, divs, fmt, base, W){
+  let widest = 0;
+  for(let g = 0; g <= divs; g++){
+    widest = Math.max(widest, textWidth(svg, fmt(max * g/divs), 'val'));
+  }
+  return Math.min(Math.round(W * 0.45), Math.max(base, Math.ceil(widest) + 14));
+}
+
 /** Скільки ліній сітки, щоб підписи були круглими числами, а не 1 250. */
 function gridDivisions(max){
   if(max <= 0) return 4;
@@ -1277,7 +1303,8 @@ function niceMax(v){
 /* ── стовпчики: надходження проти витрат ── */
 function drawFlow(box, rows){
   const W = boxWidth(box), narrow = W < 560;
-  const H = narrow ? 222 : 262, PL = narrow ? 42 : 60, PR = 14, PT = 28, PB = 30;
+  const H = narrow ? 222 : 262, PR = 14, PT = 28, PB = 30;
+  let PL = narrow ? 42 : 60;
   const axisFmt = narrow ? (v => compactFmt.format(v)) : (v => numFmt.format(Math.round(v)));
   const barFmt = v => (v >= 100000 ? compactFmt.format(v) : numFmt.format(Math.round(v)));
   const { svg, tip } = chartFrame(box, W, H);
@@ -1285,11 +1312,12 @@ function drawFlow(box, rows){
 
   const max = niceMax(Math.max(1, ...rows.map(r =>
     Math.max(r.income, r.expense, r.planIncome || 0, r.planExpense || 0))));
+  const divs = gridDivisions(max);
+  PL = axisPad(svg, max, divs, axisFmt, PL, W);
   const iw = (W - PL - PR) / rows.length;
   const bw = Math.min(rows.length <= 4 ? 34 : 16, (iw - 8) / 2);
   const y = v => PT + (H - PT - PB) * (1 - v/max);
 
-  const divs = gridDivisions(max);
   for(let g=0; g<=divs; g++){
     const v = max * g/divs, yy = y(v);
     svg.appendChild(svgEl('line', { class:'grid', x1:PL, x2:W-PR, y1:yy, y2:yy }));
@@ -1355,16 +1383,18 @@ function drawFlow(box, rows){
 function drawLine(box, pts, opts){
   opts = opts || {};
   const W = boxWidth(box), narrow = W < 560;
-  const H = narrow ? 190 : 220, PL = narrow ? 44 : 60, PR = 16, PT = 16, PB = 30;
+  const H = narrow ? 190 : 220, PR = 16, PT = 16, PB = 30;
+  let PL = narrow ? 44 : 60;
   const axisFmt = narrow ? (v => compactFmt.format(v)) : (v => numFmt.format(Math.round(v)));
   const { svg, tip } = chartFrame(box, W, H);
   if(pts.length < 2){ box.innerHTML = '<div class="empty">'+(opts.empty||'Немає даних для графіка.')+'</div>'; return; }
 
   const maxV = niceMax(Math.max(1, ...pts.map(p => p.value), opts.target || 0));
+  const divs = gridDivisions(maxV);
+  PL = axisPad(svg, maxV, divs, axisFmt, PL, W);
   const y = v => PT + (H - PT - PB) * (1 - v/maxV);
   const x = i => PL + (W - PL - PR) * (i / (pts.length - 1));
 
-  const divs = gridDivisions(maxV);
   for(let g=0; g<=divs; g++){
     const v = maxV*g/divs, yy = y(v);
     svg.appendChild(svgEl('line', { class:'grid', x1:PL, x2:W-PR, y1:yy, y2:yy }));
@@ -1461,9 +1491,7 @@ function drawPlanFact(box, rows, kind){
     const name = svgEl('text', { x:PL-12, y:y+rowH/2+4, 'text-anchor':'end' });
     name.style.fill = r.total ? 'var(--ink)' : 'var(--ink-2)';
     if(r.total) name.setAttribute('font-weight','600');
-    const maxChars = narrow ? 11 : 20;
-    name.textContent = r.group.name.length > maxChars
-      ? r.group.name.slice(0, maxChars-1)+'…' : r.group.name;
+    name.textContent = fitText(svg, r.group.name, PL - 16);
     svg.appendChild(name);
 
     // план — прозора смуга, факт — суцільна поверх неї
