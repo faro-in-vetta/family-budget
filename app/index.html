@@ -860,7 +860,7 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ══════════════════ стан ══════════════════ */
-const DEFAULTS = { rateUahEur: 48.5, cushionMonths: 6, avgWindow: 6, cushionSaved: 0 };
+const DEFAULTS = { rateUahEur: 48.5, cushionMonths: 6, avgWindow: 6, cushionSaved: 0, cushionMonthly: 0 };
 const S = {
   settings: Object.assign({}, DEFAULTS),
   tx: [], goals: [], members: [],
@@ -952,6 +952,7 @@ async function loadAll(){
     cushionMonths: Number(d.cushion_months) || DEFAULTS.cushionMonths,
     avgWindow: Number(d.avg_window) || DEFAULTS.avgWindow,
     cushionSaved: Number(d.cushion_saved) || 0,
+    cushionMonthly: Number(d.cushion_monthly) || 0,
   };
   const mine = S.members.find(m => m.user_id === S.user.id);
   if(mine){ S.me = mine.display_name || ''; S.canEdit = !!mine.can_edit; }
@@ -1026,6 +1027,7 @@ async function saveSettings(patch){
   const { error } = await sb.from('settings').update({
     rate_uah_eur: next.rateUahEur, cushion_months: next.cushionMonths,
     avg_window: next.avgWindow, cushion_saved: next.cushionSaved,
+    cushion_monthly: next.cushionMonthly,
   }).eq('household_id', S.household.id);
   if(error) throw new Error(dbError(error));
   await loadAll();
@@ -1237,7 +1239,8 @@ function cushionProjection(avg){
   const base = avg.months ? avg.expense : plannedExpenseMonthly(ymNow());
   const target = (Number(S.settings.cushionMonths)||6) * base;
   let saved = Number(S.settings.cushionSaved) || 0;
-  const free = avg.income - avg.expense - goalsMonthly;
+  const planned = Number(S.settings.cushionMonthly) || 0;
+  const free = planned > 0 ? planned : (avg.income - avg.expense - goalsMonthly);
   const pts = [{ ym: ymNow(), saved }];
   let reachedYm = (target > 0 && saved >= target) ? ymNow() : null;
 
@@ -1787,7 +1790,9 @@ function renderOverview(){
   const pct = proj.target > 0 ? clamp(saved/proj.target*100, 0, 100) : 0;
 
   const goalsMonthly = S.goals.reduce((a,g) => a + (Number(g.monthly)||0), 0);
-  const need = { plan: exp.plan, goals: goalsMonthly, total: exp.plan + goalsMonthly };
+  const cushMonthly = Number(S.settings.cushionMonthly) || 0;
+  const need = { plan: exp.plan, goals: goalsMonthly, cushion: cushMonthly,
+                 total: exp.plan + goalsMonthly + cushMonthly };
   need.gap = need.total - inc.plan;
 
   $('#tiles').innerHTML = [
@@ -1801,7 +1806,9 @@ function renderOverview(){
         +signed(exp.diff)+'</span></span></div>',
     '<div class="tile needline"><span class="eyebrow">Потрібно заробляти</span>'
       +'<span class="val">'+eur(need.total)+'</span>'
-      +'<span class="hint">витрати '+eur(need.plan)+(need.goals > 0 ? ' + цілі '+eur(need.goals) : '')
+      +'<span class="hint">витрати '+eur(need.plan)
+        +(need.goals > 0 ? ' + цілі '+eur(need.goals) : '')
+        +(need.cushion > 0 ? ' + подушка '+eur(need.cushion) : '')
         +'</span></div>',
     '<div class="tile"><span class="eyebrow">Подушка</span>'
       +'<span class="val">'+eur(saved)+'</span>'
@@ -1811,7 +1818,10 @@ function renderOverview(){
 
   $('#needNote').innerHTML = need.total <= 0
     ? 'Постав плани витрат — і тут з\'явиться, скільки треба заробляти, щоб їх закрити.'
-    : 'Щоб закрити всі витрати' + (need.goals > 0 ? ' і відкладати на цілі' : '')
+    : 'Щоб закрити всі витрати'
+      + (need.goals > 0 && need.cushion > 0 ? ', відкладати на цілі й на подушку'
+         : need.goals > 0 ? ' і відкладати на цілі'
+         : need.cushion > 0 ? ' і відкладати на подушку' : '')
       + ', потрібно <b>' + eur(need.total) + '</b> на місяць. Заплановано надходжень <b>'
       + eur(inc.plan) + '</b> — '
       + (need.gap > 0
@@ -1986,6 +1996,9 @@ function renderGoals(){
     + '<div class="form" style="margin-top:14px">'
       + '<div class="field"><label for="cushSaved">Скільки вже відкладено, €</label>'
         +'<input type="text" inputmode="decimal" id="cushSaved" class="num-in needs-edit" value="'+saved+'"></div>'
+      + '<div class="field"><label for="cushMonthly">Відкладаємо на місяць, €</label>'
+        +'<input type="text" inputmode="decimal" id="cushMonthly" class="num-in needs-edit" value="'
+        +(Number(S.settings.cushionMonthly)||0)+'"></div>'
       + '<div class="field"><button class="btn needs-edit" id="cushSave" type="button">Зберегти</button></div>'
     + '</div>';
 
@@ -2172,7 +2185,10 @@ document.addEventListener('click', async ev => {
     return;
   }
   if(t.id === 'cushSave'){
-    try{ await saveSettings({ cushionSaved: num0($('#cushSaved').value) }); }
+    try{ await saveSettings({
+      cushionSaved: num0($('#cushSaved').value),
+      cushionMonthly: num0($('#cushMonthly').value),
+    }); }
     catch(e){ alert(e.message); }
     return;
   }
