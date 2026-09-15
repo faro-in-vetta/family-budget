@@ -1,103 +1,87 @@
 # Family Budget
 
-A shared household finance page for two people: income and expenses in two
-currencies, loan and debt payoff schedules, a safety-net target, and a forecast
-of free cash. One HTML file, no build step, no server of its own.
+Shared household finances for two people: income and expenses in two currencies,
+loan and debt payoff schedules, a safety-net target, and a forecast of free cash.
 
-The point of it is the shared part. One person enters a transaction on a phone,
-the other sees it on a laptop a second later.
+Two generations of the same product live here.
+
+| | `app/` | root `index.html`, `index.uk.html` |
+|---|---|---|
+| Backend | Supabase (Postgres + auth) | Claude Artifact database |
+| Who can use it | anyone you invite, with their own login | members of one Claude organisation |
+| Hosting | any static host | claude.ai |
+| Cost | free tier | included in a Claude plan |
+
+**`app/` is the current version.** The root files are the earlier artifact build,
+kept for reference.
+
+Setup instructions (in Ukrainian): **[SETUP.md](SETUP.md)**
 
 ## What it does
 
-**Transactions.** Income or expense, in EUR or UAH. A UAH entry stores the rate
-that applied when it was entered, so history does not drift every time the rate
-changes. All totals are in EUR.
+**Transactions.** Income or expense, EUR or UAH. A UAH entry stores the rate that
+applied when it was entered, so history does not drift when the rate changes.
+Totals are in EUR.
 
-**Loans and debts.** Annuity payments, payoff date, total interest over the
-whole term. Extra payments shorten the term rather than the instalment — that is
-what cuts total interest the most, and the effect is visible immediately.
+**Loans and debts.** Annuity payments, payoff date, total interest over the term.
+Extra payments shorten the term rather than the instalment — that is what cuts
+total interest most, and the effect shows immediately.
 
-**Safety net.** The target is N months of expenses *including* loan payments.
-The forecast models the thing most planners miss: when a loan closes, its
-payment is freed and starts working for the safety net, so the curve gets
-steeper at that point.
+**Safety net.** Target is N months of expenses *including* loan payments. The
+forecast models what most planners miss: when a loan closes its payment is freed
+and starts working for the safety net, so the curve gets steeper there.
 
-**Ledger.** Every entry records who made it.
+**Two people, live.** What one enters appears on the other's screen without a
+reload, over Postgres realtime.
 
-## How the sharing works
+## Security model
 
-The page uses the `db` runtime capability of a published Claude Artifact: a
-realtime document store scoped to the artifact, shared by its viewers. There is
-no backend to deploy and nothing to pay for.
+Every table has row level security on. Each policy asks one question: is the
+signed-in user a member of this household? Nothing is readable or writable
+otherwise — a stranger's query returns an empty set rather than an error, and a
+write is rejected outright.
 
-This has two consequences worth understanding before you change the hosting:
+Members are either editors or view-only. A view-only member can read everything
+and change nothing.
 
-- Served as a plain static file (GitHub Pages, any web host), `claude.use("db")`
-  resolves `null`, the page falls back to browser-local storage and shows a
-  banner. It still works — but only for one person on one device.
-- A page declaring `db` cannot be made public. Every reader and writer is a
-  signed-in member of the owner's organisation. That is enforced, not a setting.
+`supabase/test-access.sh` proves it rather than asserting it. Against a real
+Postgres it creates two households and a stranger, then checks that the stranger
+sees zero rows in every table, cannot insert into someone else's household,
+and cannot change or delete their rows; that a view-only member can read but not
+write; and that a rotated invite code stops working. Run it after any change to
+the policies.
 
-To run it as intended, publish `index.html` as a Claude Artifact with
-`capabilities: {db: {}}`.
-
-Access rules used in the deployed version:
-
-```js
-capabilities: { db: { rules: [ { path: "", read: "interact", write: "admin" } ] } }
-```
-
-Everyone with access can read; only people granted edit rights can write. A
-view-only viewer cannot modify or delete anything.
-
-## Data model
-
-| Path | Contents |
-|---|---|
-| `settings/main` | rate, safety-net months, averaging window, amount saved, member names |
-| `tx/<YYYY-MM>` | one document per month, `items: []` — transactions are aggregated per month, not one document each, because the store is capped at 5,000 documents per artifact |
-| `loans/<id>` | amount, currency, annual rate, term, start date, extra payments |
-| `goals/<id>` | target, saved, monthly contribution |
-
-Month documents are written under a short cooperative lease (`acquire`), so two
-people adding a transaction in the same second cannot overwrite each other.
-
-## How the numbers are calculated
-
-- **Averages** use the last N *complete* months. The current month is excluded —
-  it is partial and would understate expenses.
-- **Loan payments** come from the Loans section, not from the ledger. Do not
-  enter them twice.
-- **Free cash** = average income − average expenses − loan payments − goal
-  contributions.
-- **Safety-net forecast** runs month by month for five years.
-
-The forecast deliberately ignores inflation, income changes and currency
-movements. It answers "what if everything stays as it is now", which is a useful
-question and not a prediction.
-
-## Customising
-
-Everything visual lives in the token block at the top of the file: the palette,
-the type scale, the two fonts. The categorical chart colours (`--c1`…`--c7`) are
-validated for colour-vision deficiency and for contrast against both the light
-and dark surfaces — if you swap them, re-validate rather than eyeballing.
-
-Currency: `EUR` and `UAH` are wired through `toEur()` and the settings rate.
-Adding a third currency means extending that function and the two currency
-selects.
+The `anon` key in `config.js` is public by design — it only names the project.
+Access is decided by the policies, not by keeping the key secret. The
+`service_role` key must never appear in this repository or in any page.
 
 ## Files
 
-- `index.html` — the entire application in English: markup, styles, logic, charts.
-- `index.uk.html` — the Ukrainian version, published separately. Same code and
-  same data model; only user-facing text and the number locale differ.
+```
+app/
+  index.html            the whole application: markup, styles, logic, charts
+  config.example.js     copy to config.js and fill in your project's keys
+supabase/
+  schema.sql            tables, policies, invite codes, realtime — run once
+  test-access.sh        proves the policies actually isolate households
+SETUP.md                step-by-step setup
+```
 
-No dependencies, no build. Open either file in a browser and it runs.
+## How the numbers are calculated
 
-## Keeping the two languages in sync
+- **Averages** use the last N *complete* months; the current month is excluded
+  because it is partial and would understate expenses.
+- **Loan payments** come from the Loans section, not from the ledger. Entering
+  them twice double-counts them.
+- **Free cash** = average income − average expenses − loan payments − goal
+  contributions.
+- **The forecast ignores** inflation, income changes and currency movements. It
+  answers "what if everything stays as it is now", which is a useful question
+  and not a prediction.
 
-They are independent files, not a translation layer — a change to one does not
-reach the other. When you change behaviour, change both, and keep the element
-ids, CSS class names and database field names identical between them. That
-invariant is what lets the same data model and the same checks serve both.
+## Still to do
+
+- One page with a UK/EN switch instead of separate language files.
+- CSV import from a bank statement — the single biggest reason budget tools get
+  abandoned is the typing.
+- Per-category monthly limits with a warning when a month is running over.

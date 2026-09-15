@@ -1,0 +1,2177 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<title>Сімейний бюджет</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+/* ─────────── токени: світла тема ─────────── */
+:root{
+  --paper:#F4F3EE;
+  --surface:#FFFFFF;
+  --surface-2:#FAF9F5;
+  --ink:#16191E;
+  --ink-2:#3D434D;
+  --muted:#6E7480;
+  --rule:#E2DFD6;
+  --rule-soft:#EDEAE2;
+
+  --credit:#1F4E79;      /* надходження — чорнило */
+  --debit:#A8322A;       /* витрати — червоне */
+  --good:#1F6F4A;
+  --warn:#A8761C;
+  --crit:#A8322A;
+
+  --c1:#2E5E9E; --c2:#C0562F; --c3:#8B4E9C; --c4:#0F8A5F;
+  --c5:#B08A1E; --c6:#C4436B; --c7:#0089A3;
+
+  --shadow:0 1px 2px rgba(22,25,30,.05), 0 8px 24px -16px rgba(22,25,30,.18);
+  --radius:10px;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --body:"Karla",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Spectral",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#131519;
+    --surface:#191C21;
+    --surface-2:#1F232A;
+    --ink:#ECEAE4;
+    --ink-2:#C3C6CC;
+    --muted:#8C939E;
+    --rule:#2B3038;
+    --rule-soft:#232830;
+
+    --credit:#6FA3DC;
+    --debit:#E0776C;
+    --good:#4FB286;
+    --warn:#D0A24A;
+    --crit:#E0776C;
+
+    --c1:#4E80C4; --c2:#D0714A; --c3:#A268B5; --c4:#1FA06F;
+    --c5:#AE8A22; --c6:#D75B7F; --c7:#16A0B8;
+
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131519;
+  --surface:#191C21;
+  --surface-2:#1F232A;
+  --ink:#ECEAE4;
+  --ink-2:#C3C6CC;
+  --muted:#8C939E;
+  --rule:#2B3038;
+  --rule-soft:#232830;
+
+  --credit:#6FA3DC;
+  --debit:#E0776C;
+  --good:#4FB286;
+  --warn:#D0A24A;
+  --crit:#E0776C;
+
+  --c1:#4E80C4; --c2:#D0714A; --c3:#A268B5; --c4:#1FA06F;
+  --c5:#AE8A22; --c6:#D75B7F; --c7:#16A0B8;
+
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.shell{max-width:1140px;margin:0 auto;padding-inline:20px;padding-block:20px 64px}
+@media (max-width:520px){ .shell{padding-inline:16px} }
+
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:26px;letter-spacing:-.01em}
+h2{font-size:19px}
+h3{font-size:16px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.eyebrow{
+  font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* ─────────── шапка ─────────── */
+.top{
+  display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;
+  padding-bottom:16px;border-bottom:1px solid var(--rule);
+}
+.top .who{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.brand-sub{color:var(--muted);font-size:13px;margin-top:2px}
+
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.dot.live{background:var(--good)}
+.sync{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+
+/* ─────────── вкладки ─────────── */
+.tabs{display:flex;gap:2px;margin:18px 0 22px;flex-wrap:wrap}
+.tab{
+  appearance:none;border:0;background:transparent;cursor:pointer;
+  font-family:var(--body);font-size:14px;font-weight:600;color:var(--muted);
+  padding:8px 13px;border-radius:999px;
+}
+.tab:hover{color:var(--ink-2);background:var(--surface-2)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tab:focus-visible{outline:2px solid var(--credit);outline-offset:2px}
+.panel[hidden]{display:none!important}
+
+/* ─────────── плитки ─────────── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.tile{
+  background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:16px 16px 14px;display:flex;flex-direction:column;gap:6px;
+}
+.tile .val{font-family:var(--mono);font-size:25px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
+.tile .hint{font-size:12px;color:var(--muted)}
+.tile.lead{border-left:3px solid var(--credit)}
+.tile.debtline{border-left:3px solid var(--debit)}
+
+/* ─────────── картки й таблиці ─────────── */
+.card{
+  background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);
+  padding:18px;box-shadow:var(--shadow);
+}
+.card + .card{margin-top:14px}
+.card-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.card-head .sub{font-size:12.5px;color:var(--muted);margin-left:auto}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:860px){ .grid-2{grid-template-columns:1fr} }
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{
+  text-align:left;font-size:11px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);padding:0 10px 8px 0;white-space:nowrap;
+}
+td{padding:9px 10px 9px 0;border-top:1px solid var(--rule-soft);vertical-align:top}
+td.r,th.r{text-align:right;padding-right:0}
+tr.month-sep td{border-top:1px solid var(--rule)}
+
+.amt{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.amt.credit{color:var(--credit)}
+.amt.debit{color:var(--debit)}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+  padding:3px 9px;border-radius:999px;background:var(--surface-2);
+  border:1px solid var(--rule);color:var(--ink-2);white-space:nowrap;
+}
+.chip .sw{width:8px;height:8px;border-radius:2px;flex:none}
+.chip.good{color:var(--good);border-color:color-mix(in srgb,var(--good) 35%,transparent)}
+.chip.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.chip.crit{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 35%,transparent)}
+.chip.demo{color:var(--muted)}
+
+/* ─────────── форми ─────────── */
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;align-items:end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+label{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+input,select,textarea{
+  font-family:var(--body);font-size:14.5px;color:var(--ink);
+  background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;
+  padding:9px 11px;min-height:40px;width:100%;
+}
+input.num-in{font-family:var(--mono);font-variant-numeric:tabular-nums}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--credit);outline-offset:-1px;border-color:transparent}
+.seg{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{
+  flex:1;appearance:none;border:0;background:transparent;cursor:pointer;
+  font-family:var(--body);font-size:14px;font-weight:600;color:var(--muted);padding:9px 6px;min-height:40px;
+}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+.btn{
+  appearance:none;cursor:pointer;font-family:var(--body);font-size:14.5px;font-weight:700;
+  background:var(--ink);color:var(--paper);border:1px solid var(--ink);
+  border-radius:8px;padding:10px 18px;min-height:40px;
+}
+.btn:hover{opacity:.88}
+.btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--rule)}
+.btn.quiet{background:transparent;border-color:transparent;color:var(--muted);padding:6px 8px;min-height:auto;font-weight:600;font-size:13px}
+.btn.quiet:hover{color:var(--debit)}
+.btn.danger{background:transparent;border-color:color-mix(in srgb,var(--crit) 45%,transparent);color:var(--crit)}
+.btn:focus-visible{outline:2px solid var(--credit);outline-offset:2px}
+
+/* ─────────── графіки ─────────── */
+.chartbox{position:relative}
+svg.chart{display:block;width:100%;height:auto;overflow:visible}
+svg.chart text{font-family:var(--body);font-size:11px;fill:var(--muted)}
+svg.chart text.val{font-family:var(--mono);font-size:11px;font-weight:500;fill:var(--ink-2)}
+svg.chart .grid{stroke:var(--rule-soft);stroke-width:1}
+svg.chart .axis{stroke:var(--rule);stroke-width:1}
+.tip{
+  position:absolute;pointer-events:none;z-index:5;
+  background:var(--surface);border:1px solid var(--rule);border-radius:8px;
+  padding:8px 10px;font-size:12.5px;box-shadow:var(--shadow);
+  min-width:130px;opacity:0;transition:opacity .1s;
+}
+.tip.on{opacity:1}
+.tip .t{font-weight:700;margin-bottom:4px}
+.tip .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.tip .row .k{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.tip .row .v{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:3px;border-radius:2px;display:block}
+
+.note{font-size:12.5px;color:var(--muted);line-height:1.55}
+.banner{
+  border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);
+  background:color-mix(in srgb,var(--warn) 9%,var(--surface));
+  border-radius:var(--radius);padding:12px 14px;font-size:13.5px;margin-bottom:14px;
+}
+.empty{padding:26px 0;text-align:center;color:var(--muted);font-size:14px}
+.rowflex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+hr.sep{border:0;border-top:1px solid var(--rule);margin:16px 0}
+
+/* смуга вибору місяця */
+.monthbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.mlabel{font-family:var(--display);font-size:18px;font-weight:600;min-width:150px;text-align:center}
+.btn.mnav{font-size:18px;padding:4px 10px;line-height:1;color:var(--ink-2)}
+
+/* короткий висновок під графіком */
+.analysis{margin-top:12px;font-size:13.5px;line-height:1.6;color:var(--ink-2)}
+.analysis b{font-family:var(--mono);font-weight:600}
+.analysis .over{color:var(--crit)}
+.analysis .under{color:var(--good)}
+
+.planrow .conly{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.planrow .paym{min-height:36px;padding:5px 8px;font-size:13px;font-family:var(--mono);
+  background:var(--surface-2)}
+.planrow.dim{opacity:.62}
+.mpick{width:auto;min-height:34px;padding:4px 8px;font-size:13.5px;
+  font-family:var(--mono);background:var(--surface-2)}
+
+/* компактне додавання підгрупи */
+.addcat{display:flex;gap:6px;margin-top:8px;align-items:center}
+.addcat input{min-height:34px;padding:5px 9px;font-size:13.5px;flex:1;min-width:0}
+.addcat button{min-height:34px;padding:5px 14px;font-size:13.5px;white-space:nowrap}
+
+/* рядки планів */
+.planrow{display:grid;grid-template-columns:1fr 120px 120px auto;gap:10px;align-items:center;
+  padding:8px 0;border-top:1px solid var(--rule-soft)}
+.planrow input{min-height:36px;padding:6px 9px;font-size:14px}
+.planrow .cname{min-width:0;overflow-wrap:anywhere}
+.plangroup{margin-top:16px}
+.plangroup:first-child{margin-top:0}
+.plangroup .ghead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.plangroup .ghead h3{font-size:16px}
+.plangroup .gsum{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.planhead{display:grid;grid-template-columns:1fr 120px 120px auto;gap:10px;
+  font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-bottom:4px}
+@media (max-width:620px){
+  .plangroup .ren{font-size:0;padding:4px 6px}
+  .plangroup .ren::after{content:'✎';font-size:14px}
+  .planrow,.planhead{grid-template-columns:1fr 84px 84px auto;gap:6px}
+  .planrow input{font-size:13px;padding:5px 7px}
+  .planhead{font-size:10px}
+}
+
+.tx-sub,.d-short,.del-short{display:none}
+
+/* ── телефон ── */
+@media (max-width:560px){
+  h1{font-size:21px}
+  .brand-sub{display:none}
+  .top{padding-bottom:12px;gap:10px}
+  .top .who{margin-left:0;width:100%;align-items:center;justify-content:space-between}
+  .top .who .field{flex-direction:row;align-items:baseline;gap:8px;min-width:0}
+  .whoname{padding-top:0;font-size:14px}
+  .sync{font-size:11.5px}
+  .tabs{gap:4px;margin:14px 0 16px}
+  .tab{font-size:13.5px;padding:7px 11px}
+
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tile{padding:13px 13px 11px;gap:4px}
+  .tile .val{font-size:20px}
+  .tile .hint{font-size:11.5px}
+
+  .card{padding:15px}
+  .card-head{margin-bottom:11px}
+  .card-head .sub{margin-left:auto;text-align:right}
+
+  /* перемикач «Витрата / Надходження» — на весь рядок, щоб не обрізався */
+  .field-type,.field-cat{grid-column:1/-1}
+
+  /* журнал: другорядні колонки ховаємо, їхній зміст іде під статтю */
+  .col-who,.col-orig{display:none}
+  .tx-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+
+  /* коротка дата і хрестик замість слова — щоб рядок вміщався */
+  .d-full,.del-full{display:none}
+  .d-short{display:inline}
+  .del-short{display:inline;font-size:18px;line-height:1}
+  td{padding-right:6px}
+}
+
+/* вхід */
+.authwrap{max-width:440px;margin:6vh auto 0}
+.authbrand h1{font-size:24px}
+.authbrand .note{margin:6px 0 0}
+.whoname{font-family:var(--mono);font-size:15px;font-weight:500;padding-top:4px}
+.code{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:.12em;color:var(--credit)}
+code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
+  border:1px solid var(--rule);border-radius:5px;padding:1px 5px}
+.btn:disabled,input:disabled{opacity:.45;cursor:not-allowed}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+
+<div class="shell" id="screen-auth" hidden>
+  <div class="authwrap">
+    <div class="card" id="authCard">
+      <div class="authbrand">
+        <h1>Сімейний бюджет</h1>
+        <p class="note">Спільний облік для двох: надходження, борги, подушка, прогноз.</p>
+      </div>
+      <div class="seg" style="margin:18px 0 14px">
+        <button type="button" id="tabSignin" aria-pressed="true">Увійти</button>
+        <button type="button" id="tabSignup" aria-pressed="false">Зареєструватися</button>
+      </div>
+      <form id="authForm">
+        <div class="field" style="margin-bottom:10px">
+          <label for="auEmail">Пошта</label>
+          <input type="email" id="auEmail" autocomplete="email" required>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label for="auPass">Пароль</label>
+          <input type="password" id="auPass" autocomplete="current-password" minlength="6" required>
+        </div>
+        <button class="btn" type="submit" id="auSubmit" style="width:100%">Увійти</button>
+      </form>
+      <div class="note" id="authMsg" style="margin-top:12px;min-height:20px"></div>
+      <div class="note">
+        Дані бачать лише учасники твоєї сім'ї. Не став тут пароль, яким користуєшся деінде.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="shell" id="screen-setup" hidden>
+  <div class="authwrap">
+    <div class="card">
+      <div class="authbrand">
+        <h1>Ще один крок</h1>
+        <p class="note">Створи сім'ю, якщо ти перший. Якщо другий — введи код, який дав перший.</p>
+      </div>
+      <hr class="sep">
+      <h3>Створити сім'ю</h3>
+      <form id="createForm" class="form" style="margin-top:10px">
+        <div class="field"><label for="crName">Назва</label><input id="crName" placeholder="Наша сім'я" required></div>
+        <div class="field"><label for="crMe">Як тебе підписувати</label><input id="crMe" placeholder="Alessandro" required></div>
+        <div class="field"><button class="btn" type="submit">Створити</button></div>
+      </form>
+      <hr class="sep">
+      <h3>Приєднатися за кодом</h3>
+      <form id="joinForm" class="form" style="margin-top:10px">
+        <div class="field"><label for="jnCode">Код запрошення</label><input id="jnCode" placeholder="A1B2C3D4E5" required></div>
+        <div class="field"><label for="jnMe">Як тебе підписувати</label><input id="jnMe" required></div>
+        <div class="field"><button class="btn ghost" type="submit">Приєднатися</button></div>
+      </form>
+      <div class="note" id="setupMsg" style="margin-top:12px;min-height:20px"></div>
+      <div class="rowflex" style="margin-top:6px">
+        <div class="spacer"></div>
+        <button class="btn quiet" id="setupSignOut" type="button">Вийти з акаунта</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="shell" id="screen-app" hidden>
+
+  <header class="top">
+    <div>
+      <h1>Сімейний бюджет</h1>
+      <div class="brand-sub">Спільний бюджет — надходження, борги, подушка, прогноз</div>
+    </div>
+    <div class="who">
+      <div class="field" style="min-width:120px">
+        <label>Записи підписує</label>
+        <div class="whoname" id="meName">—</div>
+      </div>
+      <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">під'єднання…</span></span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="t-over"  aria-selected="true"  aria-controls="p-over">Огляд</button>
+    <button class="tab" role="tab" id="t-tx"    aria-selected="false" aria-controls="p-tx">Операції</button>
+    <button class="tab" role="tab" id="t-plan"  aria-selected="false" aria-controls="p-plan">Плани і статті</button>
+    <button class="tab" role="tab" id="t-goals" aria-selected="false" aria-controls="p-goals">Подушка й цілі</button>
+    <button class="tab" role="tab" id="t-set"   aria-selected="false" aria-controls="p-set">Налаштування</button>
+  </div>
+
+  <div id="warnBox"></div>
+
+  <section class="panel" id="p-over" role="tabpanel" aria-labelledby="t-over">
+
+    <div class="monthbar">
+      <button class="btn quiet mnav" id="mPrev" type="button" aria-label="Попередній місяць">←</button>
+      <div class="mlabel" id="mLabel">—</div>
+      <button class="btn quiet mnav" id="mNext" type="button" aria-label="Наступний місяць">→</button>
+      <input type="month" class="mpick" id="mPick" aria-label="Обрати місяць">
+      <button class="btn quiet" id="mNow" type="button">цей місяць</button>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="card-head">
+        <h2>Витрати: план і факт</h2>
+        <span class="sub" id="expSub"></span>
+      </div>
+      <div class="chartbox" id="expBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Надходження: план і факт</h2>
+        <span class="sub" id="incSub"></span>
+      </div>
+      <div class="chartbox" id="incBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Надходження проти витрат</h2>
+        <span class="sub" id="flowSub"></span>
+      </div>
+      <div class="chartbox" id="flowBox"></div>
+      <div class="legend">
+        <span><i style="background:var(--credit)"></i>Надходження, факт</span>
+        <span><i style="background:var(--debit)"></i>Витрати, факт</span>
+        <span><i style="background:var(--credit);opacity:.28"></i><i style="background:var(--debit);opacity:.28;margin-left:-4px"></i>Прозорі — план</span>
+      </div>
+      <div class="analysis" id="flowNote"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h2>Структура витрат</h2>
+          <span class="sub" id="catSub"></span>
+        </div>
+        <div class="chartbox" id="catBox"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h2>Формування подушки</h2>
+          <span class="sub" id="cushSub"></span>
+        </div>
+        <div class="chartbox" id="cushBox"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-tx" role="tabpanel" aria-labelledby="t-tx" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Нова операція</h2></div>
+      <form id="txForm">
+        <div class="form">
+          <div class="field field-type">
+            <label>Тип</label>
+            <div class="seg">
+              <button type="button" id="kindExp" aria-pressed="true">Витрата</button>
+              <button type="button" id="kindInc" aria-pressed="false">Надходження</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="txDate">Дата</label>
+            <input type="date" id="txDate" required>
+          </div>
+          <div class="field">
+            <label for="txAmount">Сума</label>
+            <input type="text" inputmode="decimal" id="txAmount" class="num-in" placeholder="0,00" required>
+          </div>
+          <div class="field">
+            <label for="txCur">Валюта</label>
+            <select id="txCur"><option value="EUR">EUR</option><option value="UAH">UAH</option></select>
+          </div>
+          <div class="field field-cat">
+            <label for="txCat">Стаття</label>
+            <select id="txCat" required></select>
+          </div>
+          <div class="field">
+            <label for="txNote">Коментар</label>
+            <input id="txNote" placeholder="не обов'язково">
+          </div>
+          <div class="field"><button class="btn needs-edit" type="submit">Записати</button></div>
+        </div>
+        <div class="note" id="txHint" style="margin-top:10px"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Журнал</h2>
+        <span class="sub" id="txSub"></span>
+      </div>
+      <div class="tablewrap"><table id="txTable"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-plan" role="tabpanel" aria-labelledby="t-plan" hidden>
+
+    <div class="monthbar">
+      <button class="btn quiet mnav" id="pPrev" type="button" aria-label="Попередній місяць">←</button>
+      <div class="mlabel" id="pLabel">—</div>
+      <button class="btn quiet mnav" id="pNext" type="button" aria-label="Наступний місяць">→</button>
+      <input type="month" class="mpick" id="pPick" aria-label="Обрати місяць">
+      <button class="btn quiet" id="pNow" type="button">цей місяць</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Витрати</h2>
+        <span class="sub">план на місяць по статтях</span>
+      </div>
+      <div id="planExp"></div>
+      <hr class="sep">
+      <form class="form" id="groupFormExp">
+        <div class="field">
+          <label for="ngExp">Нова основна група витрат</label>
+          <input id="ngExp" placeholder="Наприклад: Подорожі" required>
+        </div>
+        <div class="field"><button class="btn ghost needs-edit" type="submit">Додати групу</button></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Надходження</h2>
+        <span class="sub">план на місяць по статтях</span>
+      </div>
+      <div id="planInc"></div>
+      <hr class="sep">
+      <form class="form" id="groupFormInc">
+        <div class="field">
+          <label for="ngInc">Нова група надходжень</label>
+          <input id="ngInc" placeholder="Наприклад: Оренда квартири" required>
+        </div>
+        <div class="field"><button class="btn ghost needs-edit" type="submit">Додати групу</button></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Витрати: план і факт</h2>
+        <span class="sub" id="expSub2"></span>
+      </div>
+      <div class="analysis" id="expNote"></div>
+      <hr class="sep">
+      <div class="tablewrap"><table id="expTable"></table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Надходження: план і факт</h2>
+        <span class="sub" id="incSub2"></span>
+      </div>
+      <div class="analysis" id="incNote"></div>
+      <hr class="sep">
+      <div class="tablewrap"><table id="incTable"></table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Як це працює</h2></div>
+      <div class="note">
+        <p style="margin-top:0"><strong>Сума</strong> — скільки планується по цій статті.
+        Поставив «Їжа — 600 €» — і кожен місяць порівнюється з шістьмастами.</p>
+        <p><strong>Коли надійде</strong> — порожньо означає «щомісяця». Якщо поставити місяць,
+        сума планується <em>тільки</em> в ньому: гроші від одного джерела чекаєш у вересні,
+        від іншого — у жовтні, і на графіку «Надходження проти витрат» це видно
+        саме в тих місяцях.</p>
+        <p><strong>Підгрупи.</strong> Усередині групи можна завести скільки завгодно статей:
+        у «Кредитах» — «Кредит1 Саша», «Авто в лізинг»; у «Їжі» — «Продукти», «Кафе».
+        У зведенні вони збираються назад у свою групу.</p>
+        <p><strong>Кредити тут — звичайні статті.</strong> Платіж вноситься
+        як витрата, як і все інше, і порівнюється з планом.</p>
+        <p style="margin-bottom:0"><strong>Нова група створюється порожньою.</strong>
+        Статті в ній заводиш сам — саме вони тримають суми.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-goals" role="tabpanel" aria-labelledby="t-goals" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Фінансова подушка</h2></div>
+      <div id="cushionCard"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Інші цілі</h2></div>
+      <form id="goalForm">
+        <div class="form">
+          <div class="field">
+            <label for="glName">Назва</label>
+            <input id="glName" placeholder="Відпустка, авто, ремонт" required>
+          </div>
+          <div class="field">
+            <label for="glTarget">Потрібно, €</label>
+            <input type="text" inputmode="decimal" id="glTarget" class="num-in" required>
+          </div>
+          <div class="field">
+            <label for="glSaved">Уже зібрано, €</label>
+            <input type="text" inputmode="decimal" id="glSaved" class="num-in" value="0">
+          </div>
+          <div class="field">
+            <label for="glMonthly">Відкладаємо на місяць, €</label>
+            <input type="text" inputmode="decimal" id="glMonthly" class="num-in" value="0">
+          </div>
+          <div class="field"><button class="btn" type="submit">Додати ціль</button></div>
+        </div>
+      </form>
+      <hr class="sep">
+      <div id="goalList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-set" role="tabpanel" aria-labelledby="t-set" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Курс і підсумки</h2></div>
+      <div class="form">
+        <div class="field">
+          <label for="stRate">Гривень за 1 євро</label>
+          <input type="text" inputmode="decimal" id="stRate" class="num-in">
+        </div>
+        <div class="field">
+          <label for="stMonths">Подушка на скільки місяців</label>
+          <input type="number" id="stMonths" class="num-in" step="1" min="1" max="24">
+        </div>
+        <div class="field">
+          <label for="stAvg">Середні рахувати за останні, місяців</label>
+          <input type="number" id="stAvg" class="num-in" step="1" min="1" max="24">
+        </div>
+        <div class="field"><button class="btn" id="stSave" type="button">Зберегти</button></div>
+      </div>
+      <div class="note" style="margin-top:10px">
+        Курс застосовується до нових гривневих записів. Уже внесені операції зберігають курс,
+        який діяв на момент внесення, — тому історія не «пливе» щоразу, коли курс змінюється.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Ти в цій сім'ї</h2></div>
+      <div class="form">
+        <div class="field">
+          <label for="stMyName">Як підписувати твої записи</label>
+          <input id="stMyName" class="needs-edit">
+        </div>
+        <div class="field"><button class="btn needs-edit" id="stSaveMyName" type="button">Зберегти ім'я</button></div>
+      </div>
+      <hr class="sep">
+      <div class="rowflex">
+        <div class="field" style="min-width:0">
+          <label>Сім'я</label>
+          <div class="num" id="hhName">—</div>
+        </div>
+        <div class="field" style="min-width:0">
+          <label>Твій вхід</label>
+          <div class="note" id="hhEmail"></div>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="signOut" type="button">Вийти</button>
+      </div>
+      <div style="margin-top:12px"><span class="eyebrow">Учасники</span>
+        <div class="rowflex" id="hhMembers" style="margin-top:6px"></div>
+      </div>
+      <hr class="sep">
+      <div class="rowflex">
+        <div class="field" style="min-width:0">
+          <label>Код запрошення</label>
+          <div class="code" id="hhCode">—</div>
+        </div>
+        <button class="btn ghost needs-edit" id="hhRotate" type="button">Змінити код</button>
+      </div>
+      <div class="note" style="margin-top:10px">
+        Цей код вводить друга людина, коли реєструється. Після того, як вона зайшла,
+        зміни код — щоб старий, який ішов через месенджер, більше нікого не пускав.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Доступ і безпека</h2></div>
+      <div class="note">
+        <p style="margin-top:0"><strong>Дані живуть у вашій власній базі</strong> на Supabase, у Франкфурті.
+        Не в цій сторінці: сторінку можна відкрити звідки завгодно, але без входу
+        вона не покаже нічого.</p>
+        <p><strong>Бачить тільки ваша сім'я.</strong> У базі на кожній таблиці стоїть правило:
+        рядок віддається лише тому, хто є учасником цього домогосподарства. Стороння людина,
+        навіть маючи адресу сторінки і публічний ключ, отримає порожньо — не помилку, а саме порожньо.
+        Спроба записати чужий рядок відхиляється.</p>
+        <p><strong>Права розділені.</strong> Учасник із позначкою «лише перегляд» читає все
+        і не може ні змінити, ні видалити. Таких можна додавати спокійно.</p>
+        <p><strong>Код запрошення</strong> — єдиний спосіб потрапити в сім'ю. Після того,
+        як друга людина зайшла, зміни код: старий, що пройшов через месенджер, перестане працювати.</p>
+        <p><strong>Ключ у коді сторінки не є секретом.</strong> Він лише вказує, до якого проєкту
+        звертатись. Захист дають правила в базі, а не таємність ключа. А от пароль бази
+        і службові ключі не мають опинятися ні в коді, ні в репозиторії — ніколи.</p>
+        <p style="margin-bottom:0"><strong>Не зберігай тут</strong> номери карток, рахунків і паролі
+        від банку. Для бюджету вони не потрібні: суми, статті й дати дають усю аналітику,
+        а витік номера картки коштує грошей.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Як рахуються прогнози</h2></div>
+      <div class="note" id="methodNote"></div>
+    </div>
+  </section>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════ дрібні помічники ══════════════════ */
+const $ = (s,r) => (r||document).querySelector(s);
+const $$ = (s,r) => Array.from((r||document).querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+
+/** Гроші можна вводити і через кому, і через крапку, і з пробілами. */
+function num(v){
+  if(v === null || v === undefined) return NaN;
+  const t = String(v).replace(/[\s\u00a0\u202f]/g, '').replace(',', '.');
+  if(t === '') return NaN;
+  const n = Number(t);
+  return isFinite(n) ? n : NaN;
+}
+const num0 = v => { const n = num(v); return isNaN(n) ? 0 : n; };
+
+const numFmt  = new Intl.NumberFormat('uk-UA',{maximumFractionDigits:0});
+const numFmt2 = new Intl.NumberFormat('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2});
+const compactFmt = new Intl.NumberFormat('uk-UA',{notation:'compact',maximumFractionDigits:1});
+const rateFmt = new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2});
+const eur  = v => numFmt.format(Math.round(Number(v)||0)) + ' €';
+const eur2 = v => numFmt2.format(Number(v)||0) + ' €';
+const uah  = v => numFmt.format(Math.round(Number(v)||0)) + ' ₴';
+
+const MONTHS_SHORT = ['січ','лют','бер','кві','тра','чер','лип','сер','вер','жов','лис','гру'];
+const MONTHS_FULL = ['Січень','Лютий','Березень','Квітень','Травень','Червень',
+  'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+const MONTHS_IN = ['січень','лютий','березень','квітень','травень','червень',
+  'липень','серпень','вересень','жовтень','листопад','грудень'];
+const ymNow  = () => new Date().toISOString().slice(0,7);
+const today  = () => new Date().toISOString().slice(0,10);
+function ymAdd(ym, n){
+  let [y,m] = ym.split('-').map(Number);
+  const t = (y*12 + (m-1)) + n;
+  return String(Math.floor(t/12)) + '-' + String(t%12 + 1).padStart(2,'0');
+}
+const ymDiff = (a,b) => { const [ay,am]=a.split('-').map(Number), [by,bm]=b.split('-').map(Number);
+  return (by*12+bm) - (ay*12+am); };
+function ymLabel(ym, withYear){
+  const [y,m] = ym.split('-').map(Number);
+  return MONTHS_SHORT[m-1] + (withYear ? ' ' + String(y).slice(2) : '');
+}
+function ymLabelLong(ym){
+  const [y,m] = ym.split('-').map(Number);
+  return MONTHS_FULL[m-1] + ' ' + y;
+}
+/** «на вересень» — для заголовка колонки з планом місяця */
+function ymLabelIn(ym){
+  const [y,m] = ym.split('-').map(Number);
+  return 'на ' + MONTHS_IN[m-1];
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ══════════════════ стан ══════════════════ */
+const DEFAULTS = { rateUahEur: 48.5, cushionMonths: 6, avgWindow: 6, cushionSaved: 0 };
+const S = {
+  settings: Object.assign({}, DEFAULTS),
+  tx: [], goals: [], members: [],
+  groups: [], cats: [],
+  month: '',                             // місяць, який дивимось
+  household: null,
+  user: null,
+  me: '',
+  canEdit: false,
+};
+const allTx = () => S.tx;
+
+/* ══════════════════ Supabase ══════════════════ */
+let sb = null;
+
+function configured(){
+  const c = window.FB_CONFIG;
+  if(!c || !c.url || !c.anonKey) return false;
+  if(c.url.indexOf('supabase.co') < 0) return false;
+  const k = String(c.anonKey).trim();
+  // два формати: новий publishable (sb_publishable_…) і старий anon-JWT (eyJ…)
+  return k.indexOf('sb_publishable_') === 0 || (k.indexOf('eyJ') === 0 && k.length > 40);
+}
+
+function setSync(state, text){
+  const dot = $('#syncDot'), t = $('#syncText');
+  if(dot) dot.classList.toggle('live', state === 'live');
+  if(t) t.textContent = text;
+}
+
+/** Зрозуміла причина замість коду помилки. */
+function dbError(e){
+  const msg = (e && (e.message || e.error_description)) || '';
+  const code = e && e.code;
+  if(code === '42501' || /row-level security/i.test(msg))
+    return 'Змінювати дані не дозволено — у тебе доступ лише для перегляду.';
+  if(/Invalid login credentials/i.test(msg)) return 'Невірна пошта або пароль.';
+  if(/User already registered/i.test(msg))   return 'Ця пошта вже зареєстрована — просто увійди.';
+  if(/Password should be/i.test(msg))        return 'Пароль закороткий: щонайменше 6 символів.';
+  if(/Email not confirmed/i.test(msg))       return 'Пошта не підтверджена. Перевір листа від Supabase.';
+  if(/no household with that code/i.test(msg)) return 'Немає сім’ї з таким кодом. Перевір код.';
+  if(/Failed to fetch|NetworkError/i.test(msg)) return 'Немає зв’язку з базою. Перевір інтернет.';
+  return msg || 'Не вдалося виконати дію.';
+}
+
+/* ── перетворення рядків бази у вигляд, яким користується сторінка ── */
+const rowTx = r => ({
+  id: r.id, date: r.date, kind: r.kind, categoryId: r.category_id || null,
+  groupName: r.group_name || '',
+  amount: Number(r.amount), currency: r.currency, rate: Number(r.rate),
+  eur: Number(r.eur), category: r.category || '', note: r.note || '',
+  author: r.author || '', demo: !!r.demo, ts: r.created_at || '',
+});
+const rowGroup = r => ({ id:r.id, kind:r.kind, name:r.name, sort:Number(r.sort)||100 });
+const rowCat = r => ({
+  id: r.id, groupId: r.group_id, name: r.name,
+  plan: Number(r.plan) || 0, note: r.note || '', sort: Number(r.sort) || 100,
+  payMonth: r.pay_month || null,   // null = планується щомісяця
+});
+const rowGoal = r => ({
+  id: r.id, name: r.name, target: Number(r.target), saved: Number(r.saved),
+  monthly: Number(r.monthly), demo: !!r.demo,
+});
+
+/* ── читання ── */
+let seeding = false;
+async function loadAll(){
+  if(!S.household) return;
+  const h = S.household.id;
+  const [tx, groups, cats, goals, st, mem] = await Promise.all([
+    sb.from('transactions').select('*').eq('household_id', h).order('date', { ascending:false }),
+    sb.from('groups').select('*').eq('household_id', h).eq('archived', false),
+    sb.from('categories').select('*').eq('household_id', h).eq('archived', false),
+    sb.from('goals').select('*').eq('household_id', h),
+    sb.from('settings').select('*').eq('household_id', h).maybeSingle(),
+    sb.from('household_members').select('*').eq('household_id', h),
+  ]);
+  const first = [tx, groups, cats, goals, st, mem].find(r => r.error);
+  if(first){ setSync('off', dbError(first.error)); return; }
+
+  S.tx = (tx.data || []).map(rowTx);
+  S.groups = (groups.data || []).map(rowGroup).sort((a,b) => a.sort - b.sort || a.name.localeCompare(b.name,'uk'));
+  S.cats = (cats.data || []).map(rowCat).sort((a,b) => a.sort - b.sort || a.name.localeCompare(b.name,'uk'));
+  S.goals = (goals.data || []).map(rowGoal);
+  S.members = mem.data || [];
+  const d = st.data || {};
+  S.settings = {
+    rateUahEur: Number(d.rate_uah_eur) || DEFAULTS.rateUahEur,
+    cushionMonths: Number(d.cushion_months) || DEFAULTS.cushionMonths,
+    avgWindow: Number(d.avg_window) || DEFAULTS.avgWindow,
+    cushionSaved: Number(d.cushion_saved) || 0,
+  };
+  const mine = S.members.find(m => m.user_id === S.user.id);
+  if(mine){ S.me = mine.display_name || ''; S.canEdit = !!mine.can_edit; }
+
+  // Сім'я, створена до появи груп, отримує стартовий набір при першому відкритті.
+  if(!S.groups.length && S.canEdit && !seeding){
+    seeding = true;
+    const { error } = await sb.rpc('seed_groups', { p_household: h });
+    seeding = false;
+    if(!error){ await loadAll(); return; }
+  }
+  setSync('live', S.canEdit ? 'спільна база — зміни бачать обоє' : 'спільна база — лише перегляд');
+  renderAll();
+}
+
+/* ── живі оновлення: що вніс один, бачить інший ── */
+let channel = null;
+function subscribe(){
+  if(channel) { sb.removeChannel(channel); channel = null; }
+  const h = S.household.id;
+  let t = null;
+  const bump = () => { clearTimeout(t); t = setTimeout(loadAll, 250); };
+  channel = sb.channel('fb-' + h);
+  ['transactions','groups','categories','goals','settings','household_members'].forEach(table => {
+    channel.on('postgres_changes',
+      { event:'*', schema:'public', table, filter:'household_id=eq.' + h }, bump);
+  });
+  channel.subscribe();
+}
+
+/* ── запис ── */
+function guard(){ if(!S.canEdit) throw new Error('Змінювати дані не дозволено — у тебе доступ лише для перегляду.'); }
+
+async function addTx(item){
+  guard();
+  const { error } = await sb.from('transactions').insert({
+    household_id: S.household.id,
+    date: item.date, kind: item.kind, amount: item.amount,
+    currency: item.currency, rate: item.rate, eur: item.eur,
+    category_id: item.categoryId || null,
+    category: item.category, group_name: item.groupName || '',
+    note: item.note, author: item.author,
+    created_by: S.user.id,
+  });
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function removeTx(id){
+  guard();
+  const { error } = await sb.from('transactions').delete().eq('id', id);
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function removeRow(table, id){
+  guard();
+  const { error } = await sb.from(table).delete().eq('id', id);
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function saveSettings(patch){
+  guard();
+  const next = Object.assign({}, S.settings, patch);
+  const { error } = await sb.from('settings').update({
+    rate_uah_eur: next.rateUahEur, cushion_months: next.cushionMonths,
+    avg_window: next.avgWindow, cushion_saved: next.cushionSaved,
+  }).eq('household_id', S.household.id);
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+/* ── групи, статті, плани ── */
+async function addGroup(kind, name){
+  guard();
+  const maxSort = S.groups.filter(g => g.kind === kind).reduce((m,g) => Math.max(m, g.sort), 0);
+  const { error } = await sb.from('groups')
+    .insert({ household_id: S.household.id, kind, name, sort: maxSort + 10 });
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function renameGroup(id, name){
+  guard();
+  const { error } = await sb.from('groups').update({ name }).eq('id', id);
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function addCat(groupId, name){
+  guard();
+  const maxSort = S.cats.filter(c => c.groupId === groupId).reduce((m,c) => Math.max(m, c.sort), 0);
+  const { error } = await sb.from('categories')
+    .insert({ household_id: S.household.id, group_id: groupId, name, sort: maxSort + 10 });
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function saveCat(id, patch){
+  guard();
+  const { error } = await sb.from('categories').update(patch).eq('id', id);
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function saveMyName(name){
+  const { error } = await sb.from('household_members').update({ display_name: name })
+    .eq('household_id', S.household.id).eq('user_id', S.user.id);
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+
+/* ══════════════════ вхід і сім'я ══════════════════ */
+function show(which){
+  ['auth','setup','app'].forEach(k => {
+    const el = $('#screen-' + k);
+    if(el) el.hidden = k !== which;
+  });
+}
+function authMsg(text, bad){
+  const el = $('#authMsg');
+  el.textContent = text || '';
+  el.style.color = bad ? 'var(--crit)' : 'var(--good)';
+}
+function setupMsg(text, bad){
+  const el = $('#setupMsg');
+  el.textContent = text || '';
+  el.style.color = bad ? 'var(--crit)' : 'var(--good)';
+}
+
+async function handleSession(session){
+  S.user = (session && session.user) || null;
+  if(!S.user){ show('auth'); setSync('off','не виконано вхід'); return; }
+
+  const { data, error } = await sb
+    .from('household_members')
+    .select('household_id, display_name, can_edit, households(id, name, join_code)')
+    .eq('user_id', S.user.id)
+    .limit(1);
+
+  if(error){ setupMsg(dbError(error), true); show('setup'); return; }
+  if(!data || !data.length){ show('setup'); setSync('off','сім’ю ще не створено'); return; }
+
+  const m = data[0];
+  S.household = m.households;
+  S.me = m.display_name || '';
+  S.canEdit = !!m.can_edit;
+  show('app');
+  await loadAll();
+  subscribe();
+}
+
+async function boot(){
+  if(!configured()){
+    show('auth');
+    $('#authCard').innerHTML =
+      '<h2>Сторінка не налаштована</h2>'
+      + '<p class="note">Поруч з <code>index.html</code> має лежати файл <code>config.js</code> '
+      + 'з адресою проєкту Supabase і публічним ключем. Візьми їх у Supabase → Project Settings → API '
+      + 'і скопіюй за зразком з <code>config.example.js</code>.</p>';
+    return;
+  }
+  sb = window.supabase.createClient(window.FB_CONFIG.url, window.FB_CONFIG.anonKey, {
+    auth: { persistSession: true, autoRefreshToken: true },
+  });
+  sb.auth.onAuthStateChange((_e, session) => { handleSession(session); });
+  const { data } = await sb.auth.getSession();
+  await handleSession(data ? data.session : null);
+}
+
+/* ══════════════════ фінансова математика ══════════════════ */
+const toEur = (amount, currency, rate) =>
+  currency === 'UAH' ? (Number(amount)||0) / (Number(rate) || S.settings.rateUahEur || 1) : (Number(amount)||0);
+
+/**
+ * План статті на конкретний місяць.
+ * Без позначки місяця сума планується щомісяця.
+ * З позначкою — тільки в тому місяці, в інших нуль.
+ */
+function planFor(cat, ym){
+  const base = Number(cat.plan) || 0;
+  if(!cat.payMonth) return base;
+  return cat.payMonth === ym ? base : 0;
+}
+/** Місяці, у яких взагалі щось заплановано разово — щоб графік дотягнувся туди. */
+function latestPlannedMonth(){
+  let last = ymNow();
+  S.cats.forEach(c => { if(c.payMonth && c.plan > 0 && c.payMonth > last) last = c.payMonth; });
+  return last;
+}
+const groupById = id => S.groups.find(g => g.id === id);
+const catById = id => S.cats.find(c => c.id === id);
+const catsOf = groupId => S.cats.filter(c => c.groupId === groupId);
+const groupsOf = kind => S.groups.filter(g => g.kind === kind);
+
+/** Факт по статтях за місяць: catId -> сума в євро. Плюс те, що без статті. */
+function factsByCat(ym, kind){
+  const out = {};
+  let orphan = 0;
+  S.tx.forEach(t => {
+    if(t.kind !== kind) return;
+    if(String(t.date).slice(0,7) !== ym) return;
+    const v = Number(t.eur) || 0;
+    if(t.categoryId && catById(t.categoryId)) out[t.categoryId] = (out[t.categoryId] || 0) + v;
+    else orphan += v;
+  });
+  return { byCat: out, orphan };
+}
+
+/**
+ * Зведення за місяць: по групах, усередині — статті.
+ * Це основа і для таблиць, і для графіків, і для висновків.
+ */
+function summary(ym, kind){
+  const { byCat, orphan } = factsByCat(ym, kind);
+  const rows = groupsOf(kind).map(g => {
+    const cats = catsOf(g.id).map(c => {
+      const plan = planFor(c, ym);
+      const fact = byCat[c.id] || 0;
+      return { cat: c, plan, fact, diff: fact - plan };
+    });
+    const plan = cats.reduce((s,c) => s + c.plan, 0);
+    const fact = cats.reduce((s,c) => s + c.fact, 0);
+    return { group: g, cats, plan, fact, diff: fact - plan,
+             pct: plan > 0 ? fact / plan * 100 : (fact > 0 ? Infinity : 0) };
+  }).filter(r => r.plan > 0 || r.fact > 0 || r.cats.length > 1);
+
+  const plan = rows.reduce((s,r) => s + r.plan, 0);
+  const fact = rows.reduce((s,r) => s + r.fact, 0) + orphan;
+  return { rows, plan, fact, diff: fact - plan, orphan,
+           pct: plan > 0 ? fact / plan * 100 : 0 };
+}
+
+/** Факт по місяцях: надходження і витрати в євро. */
+function monthlyFacts(){
+  const out = {};
+  S.tx.forEach(t => {
+    const ym = String(t.date).slice(0,7);
+    if(!out[ym]) out[ym] = { income:0, expense:0 };
+    const v = Number(t.eur) || 0;
+    if(t.kind === 'income') out[ym].income += v; else out[ym].expense += v;
+  });
+  return out;
+}
+
+/** Середні за останні N ПОВНИХ місяців — поточний неповний не спотворює. */
+function averages(){
+  const facts = monthlyFacts();
+  const now = ymNow();
+  const keys = Object.keys(facts).filter(k => k < now).sort();
+  const win = clamp(Number(S.settings.avgWindow)||6, 1, 24);
+  const use = keys.slice(-win);
+  if(!use.length) return { income:0, expense:0, months:0 };
+  return {
+    income: use.reduce((s,k) => s + facts[k].income, 0) / use.length,
+    expense: use.reduce((s,k) => s + facts[k].expense, 0) / use.length,
+    months: use.length,
+  };
+}
+
+/** Сума планів на місяць по типу — з урахуванням разових позначок. */
+function plannedFor(ym, kind){
+  return groupsOf(kind).reduce((s,g) =>
+    s + catsOf(g.id).reduce((t,c) => t + planFor(c, ym), 0), 0);
+}
+
+/** Скільки планується витрачати на місяць за планами — для цілі подушки. */
+function plannedExpenseMonthly(ym){
+  return groupsOf('expense').reduce((s,g) =>
+    s + catsOf(g.id).reduce((t,c) => t + planFor(c, ym), 0), 0);
+}
+
+/**
+ * Прогноз подушки. Вільні гроші = середні надходження мінус середні витрати
+ * мінус те, що відкладається на цілі. Кредити тут окремо не рахуються —
+ * вони вже сидять у витратах як звичайні статті.
+ */
+function cushionProjection(avg){
+  const horizon = 60;
+  const goalsMonthly = S.goals.reduce((s,g) => s + (Number(g.monthly)||0), 0);
+  const base = avg.months ? avg.expense : plannedExpenseMonthly(ymNow());
+  const target = (Number(S.settings.cushionMonths)||6) * base;
+  let saved = Number(S.settings.cushionSaved) || 0;
+  const free = avg.income - avg.expense - goalsMonthly;
+  const pts = [{ ym: ymNow(), saved }];
+  let reachedYm = (target > 0 && saved >= target) ? ymNow() : null;
+
+  for(let m=1; m<=horizon; m++){
+    const ym = ymAdd(ymNow(), m);
+    saved += Math.max(free, 0);
+    pts.push({ ym, saved });
+    if(!reachedYm && target > 0 && saved >= target) reachedYm = ym;
+  }
+  return { points: pts, target, reachedYm, goalsMonthly, free };
+}
+
+/* ══════════════════ графіки ══════════════════ */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(name, attrs){
+  const e = document.createElementNS(SVG_NS, name);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function boxWidth(box){ return Math.max(300, Math.round(box.clientWidth || 720)); }
+function chartFrame(box, w, h){
+  box.innerHTML = '';
+  const svg = svgEl('svg', { class:'chart', viewBox:'0 0 '+w+' '+h,
+    preserveAspectRatio:'xMidYMid meet', role:'img' });
+  svg.style.height = h + 'px';
+  box.appendChild(svg);
+  const tip = document.createElement('div');
+  tip.className = 'tip';
+  box.appendChild(tip);
+  return { svg, tip };
+}
+function showTip(box, tip, clientX, html){
+  tip.innerHTML = html;
+  tip.classList.add('on');
+  const r = box.getBoundingClientRect();
+  const w = tip.offsetWidth || 150;
+  let x = clientX - r.left + 12;
+  if(x + w > r.width) x = clientX - r.left - w - 12;
+  tip.style.left = Math.max(0, x) + 'px';
+  tip.style.top = '8px';
+}
+/** Скільки ліній сітки, щоб підписи були круглими числами, а не 1 250. */
+function gridDivisions(max){
+  if(max <= 0) return 4;
+  const lead = max / Math.pow(10, Math.floor(Math.log10(max)));
+  return Math.abs(lead - 2) < 0.01 ? 4 : 5;
+}
+
+/** «Кругла» верхня межа осі, щоб підписи називали справжні значення. */
+function niceMax(v){
+  if(v <= 0) return 100;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / p;
+  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+  return step * p;
+}
+
+/* ── стовпчики: надходження проти витрат ── */
+function drawFlow(box, rows){
+  const W = boxWidth(box), narrow = W < 560;
+  const H = narrow ? 222 : 262, PL = narrow ? 42 : 60, PR = 14, PT = 28, PB = 30;
+  const axisFmt = narrow ? (v => compactFmt.format(v)) : (v => numFmt.format(Math.round(v)));
+  const barFmt = v => (v >= 100000 ? compactFmt.format(v) : numFmt.format(Math.round(v)));
+  const { svg, tip } = chartFrame(box, W, H);
+  if(!rows.length){ box.innerHTML = '<div class="empty">Ще немає операцій за жоден місяць.</div>'; return; }
+
+  const max = niceMax(Math.max(1, ...rows.map(r =>
+    Math.max(r.income, r.expense, r.planIncome || 0, r.planExpense || 0))));
+  const iw = (W - PL - PR) / rows.length;
+  const bw = Math.min(rows.length <= 4 ? 34 : 16, (iw - 8) / 2);
+  const y = v => PT + (H - PT - PB) * (1 - v/max);
+
+  const divs = gridDivisions(max);
+  for(let g=0; g<=divs; g++){
+    const v = max * g/divs, yy = y(v);
+    svg.appendChild(svgEl('line', { class:'grid', x1:PL, x2:W-PR, y1:yy, y2:yy }));
+    const t = svgEl('text', { x:PL-9, y:yy+4, 'text-anchor':'end', class:'val' });
+    t.textContent = axisFmt(v);
+    svg.appendChild(t);
+  }
+  svg.appendChild(svgEl('line', { class:'axis', x1:PL, x2:W-PR, y1:y(0), y2:y(0) }));
+
+  rows.forEach((r, i) => {
+    const cx = PL + iw*i + iw/2;
+    // план — прозорий стовпчик, факт — суцільна заливка поверх нього
+    [[r.planIncome, r.income, 'var(--credit)', -1],
+     [r.planExpense, r.expense, 'var(--debit)', 1]].forEach(([pv, fv, col, side]) => {
+      const x0 = cx + side*1 + (side<0 ? -bw : 0);
+      pv = pv || 0; fv = fv || 0;
+      [[pv, 0.28], [fv, 1]].forEach(([v, op]) => {
+        const hgt = Math.max(v > 0 ? 2 : 0, y(0) - y(v));
+        if(hgt <= 0) return;
+        svg.appendChild(svgEl('rect', {
+          x: x0, y: y(0)-hgt, width: bw, height: hgt, rx: 4, fill: col, opacity: op,
+        }));
+      });
+      // цифри над стовпчиками: план блідіший, факт кольоровий
+      const marks = [];
+      if(pv > 0) marks.push({ v: pv, y: y(pv) - 6, col: col, op: 0.55 });
+      if(fv > 0) marks.push({ v: fv, y: y(fv) - 6, col: col, op: 1 });
+      marks.sort((a, b) => a.y - b.y);
+      for(let j = marks.length - 2; j >= 0; j--){
+        if(marks[j+1].y - marks[j].y < 12) marks[j].y = marks[j+1].y - 12;
+      }
+      marks.forEach(m => {
+        const t = svgEl('text', { x: x0 + bw/2, y: Math.max(9, m.y),
+          'text-anchor':'middle', class:'val' });
+        t.setAttribute('fill', m.col);
+        t.setAttribute('opacity', m.op);
+        t.textContent = barFmt(m.v);
+        svg.appendChild(t);
+      });
+    });
+
+    const lab = svgEl('text', { x:cx, y:H-10, 'text-anchor':'middle' });
+    lab.textContent = ymLabel(r.ym, r.ym.endsWith('-01') || i === 0);
+    svg.appendChild(lab);
+
+    const hit = svgEl('rect', { x: PL+iw*i, y: PT, width: iw, height: H-PT-PB, fill:'transparent' });
+    const pIn = r.planIncome || 0, pOut = r.planExpense || 0;
+    hit.addEventListener('mousemove', ev => showTip(box, tip, ev.clientX,
+      '<div class="t">'+ymLabelLong(r.ym)+(r.future?' · попереду':'')+'</div>'
+      +'<div class="row"><span class="k"><i style="width:9px;height:8px;border-radius:2px;background:var(--credit);display:block"></i>надходження, факт</span><span class="v">'+eur(r.income)+'</span></div>'
+      +'<div class="row"><span class="k"><i style="width:9px;height:8px;border-radius:2px;background:var(--credit);opacity:.28;display:block"></i>надходження, план</span><span class="v">'+eur(pIn)+'</span></div>'
+      +'<div class="row" style="margin-top:4px"><span class="k"><i style="width:9px;height:8px;border-radius:2px;background:var(--debit);display:block"></i>витрати, факт</span><span class="v">'+eur(r.expense)+'</span></div>'
+      +'<div class="row"><span class="k"><i style="width:9px;height:8px;border-radius:2px;background:var(--debit);opacity:.28;display:block"></i>витрати, план</span><span class="v">'+eur(pOut)+'</span></div>'
+      +'<div class="row" style="margin-top:4px"><span class="k">різниця '+(r.future?'за планом':'факту')+'</span><span class="v" style="color:'
+        +((r.future? pIn-pOut : r.income-r.expense)>=0?'var(--good)':'var(--crit)')+'">'
+        +eur(r.future ? pIn-pOut : r.income-r.expense)+'</span></div>'));
+    hit.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    svg.appendChild(hit);
+  });
+}
+
+/* ── лінія з заливкою: борг або подушка ── */
+function drawLine(box, pts, opts){
+  opts = opts || {};
+  const W = boxWidth(box), narrow = W < 560;
+  const H = narrow ? 190 : 220, PL = narrow ? 44 : 60, PR = 16, PT = 16, PB = 30;
+  const axisFmt = narrow ? (v => compactFmt.format(v)) : (v => numFmt.format(Math.round(v)));
+  const { svg, tip } = chartFrame(box, W, H);
+  if(pts.length < 2){ box.innerHTML = '<div class="empty">'+(opts.empty||'Немає даних для графіка.')+'</div>'; return; }
+
+  const maxV = niceMax(Math.max(1, ...pts.map(p => p.value), opts.target || 0));
+  const y = v => PT + (H - PT - PB) * (1 - v/maxV);
+  const x = i => PL + (W - PL - PR) * (i / (pts.length - 1));
+
+  const divs = gridDivisions(maxV);
+  for(let g=0; g<=divs; g++){
+    const v = maxV*g/divs, yy = y(v);
+    svg.appendChild(svgEl('line', { class:'grid', x1:PL, x2:W-PR, y1:yy, y2:yy }));
+    const t = svgEl('text', { x:PL-9, y:yy+4, 'text-anchor':'end', class:'val' });
+    t.textContent = axisFmt(v);
+    svg.appendChild(t);
+  }
+
+  if(opts.target > 0){
+    const ty = y(opts.target);
+    svg.appendChild(svgEl('line', { x1:PL, x2:W-PR, y1:ty, y2:ty,
+      stroke:'var(--good)', 'stroke-width':1.5, 'stroke-dasharray':'5 4' }));
+    const tl = svgEl('text', { x:W-PR, y:ty-7, 'text-anchor':'end', class:'val' });
+    tl.setAttribute('fill','var(--good)');
+    tl.textContent = 'ціль ' + eur(opts.target);
+    svg.appendChild(tl);
+  }
+
+  const col = opts.color || 'var(--credit)';
+  const d = pts.map((p,i) => (i?'L':'M') + x(i).toFixed(1) + ' ' + y(p.value).toFixed(1)).join(' ');
+  svg.appendChild(svgEl('path', {
+    d: d + ' L ' + x(pts.length-1).toFixed(1) + ' ' + y(0) + ' L ' + x(0) + ' ' + y(0) + ' Z',
+    fill: col, 'fill-opacity': .10, stroke:'none',
+  }));
+  svg.appendChild(svgEl('path', { d, fill:'none', stroke: col, 'stroke-width': 2,
+    'stroke-linejoin':'round', 'stroke-linecap':'round' }));
+
+  const lastI = pts.length-1;
+  svg.appendChild(svgEl('circle', { cx:x(lastI), cy:y(pts[lastI].value), r:4,
+    fill: col, stroke:'var(--surface)', 'stroke-width':2 }));
+
+  const perLabel = narrow ? 62 : 78;
+  const slots = Math.max(2, Math.floor((W-PL-PR) / perLabel));
+  const stepLab = Math.max(1, Math.ceil((pts.length-1) / slots));
+  let lastLabeled = -99;
+  pts.forEach((p,i) => {
+    const isLast = i === lastI;
+    if(!(i % stepLab === 0 || isLast)) return;
+    if(isLast && (i - lastLabeled) * (W-PL-PR)/(pts.length-1) < perLabel*0.8) return;
+    lastLabeled = i;
+    const t = svgEl('text', { x:x(i), y:H-10, 'text-anchor': isLast ? 'end' : 'middle' });
+    t.textContent = ymLabel(p.ym, true);
+    svg.appendChild(t);
+  });
+
+  const hit = svgEl('rect', { x:PL, y:PT, width:W-PL-PR, height:H-PT-PB, fill:'transparent' });
+  const cross = svgEl('line', { class:'axis', x1:0, x2:0, y1:PT, y2:H-PB, opacity:0 });
+  svg.appendChild(cross);
+  hit.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect();
+    const rel = (ev.clientX - r.left) / r.width * W;
+    const i = clamp(Math.round((rel - PL) / (W-PL-PR) * (pts.length-1)), 0, pts.length-1);
+    cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('opacity', 1);
+    showTip(box, tip, ev.clientX,
+      '<div class="t">'+ymLabelLong(pts[i].ym)+'</div>'
+      +'<div class="row"><span class="k">'+(opts.label||'сума')+'</span><span class="v">'+eur(pts[i].value)+'</span></div>');
+  });
+  hit.addEventListener('mouseleave', () => { tip.classList.remove('on'); cross.setAttribute('opacity',0); });
+  svg.appendChild(hit);
+}
+
+/* ── горизонтальні смуги: структура витрат ── */
+function drawCats(box, rows){
+  if(!rows.length){ box.innerHTML = '<div class="empty">Ще немає витрат, щоб показати структуру.</div>'; return; }
+  const W = boxWidth(box), narrow = W < 560;
+  const rowH = narrow ? 28 : 30, PT = 6, PB = 6;
+  const PL = narrow ? Math.round(W*0.30) : 150, PR = narrow ? 74 : 104;
+  const H = PT + PB + rows.length*rowH;
+  const { svg, tip } = chartFrame(box, W, H);
+  const max = Math.max(...rows.map(r => r.value)) || 1;
+  const total = rows.reduce((s,r) => s+r.value, 0) || 1;
+
+  rows.forEach((r,i) => {
+    const y = PT + i*rowH;
+    const w = Math.max(3, (W-PL-PR) * (r.value/max));
+    const name = svgEl('text', { x:PL-12, y:y+rowH/2+4, 'text-anchor':'end' });
+    name.setAttribute('fill','var(--ink-2)');
+    const maxChars = narrow ? 11 : 20;
+    name.textContent = r.label.length > maxChars ? r.label.slice(0,maxChars-1)+'…' : r.label;
+    svg.appendChild(name);
+    svg.appendChild(svgEl('rect', { x:PL, y:y+6, width:w, height:rowH-14, rx:4, fill:r.color }));
+    const v = svgEl('text', { x:PL+w+10, y:y+rowH/2+4, class:'val' });
+    v.textContent = narrow ? eur(r.value) : eur(r.value) + '   ' + Math.round(r.value/total*100) + '%';
+    svg.appendChild(v);
+
+    const hit = svgEl('rect', { x:0, y:y, width:W, height:rowH, fill:'transparent' });
+    hit.addEventListener('mousemove', ev => showTip(box, tip, ev.clientX,
+      '<div class="t">'+esc(r.label)+'</div>'
+      +'<div class="row"><span class="k">сума</span><span class="v">'+eur2(r.value)+'</span></div>'
+      +'<div class="row"><span class="k">частка</span><span class="v">'+(r.value/total*100).toFixed(1)+'%</span></div>'));
+    hit.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    svg.appendChild(hit);
+  });
+}
+
+/* ── план проти факту: смуга факту і позначка плану ── */
+function drawPlanFact(box, rows, kind){
+  if(!rows.length){
+    box.innerHTML = '<div class="empty">Ще немає ні планів, ні записів за цей місяць.</div>';
+    return;
+  }
+  const W = boxWidth(box), narrow = W < 560;
+  const rowH = narrow ? 42 : 40, PT = 8, PB = 8, GAP = 14;
+  const PL = narrow ? Math.round(W*0.30) : 170, PR = narrow ? 78 : 250;
+
+  // підсумковий рядок «Разом» — окремою смугою внизу
+  const tot = rows.reduce((a, r) => { a.plan += r.plan; a.fact += r.fact; return a; },
+    { plan:0, fact:0 });
+  tot.diff = tot.fact - tot.plan;
+  const all = rows.concat([{ group:{ name:'Разом' }, plan:tot.plan, fact:tot.fact,
+    diff:tot.diff, total:true }]);
+
+  const H = PT + PB + all.length*rowH + GAP;
+  const { svg, tip } = chartFrame(box, W, H);
+
+  const max = Math.max(1, ...rows.map(r => Math.max(r.plan, r.fact)));
+  const maxTot = Math.max(1, tot.plan, tot.fact);
+  const barColor = kind === 'income' ? 'var(--credit)' : 'var(--debit)';
+  const track = W - PL - PR;
+
+  all.forEach((r, i) => {
+    const y = PT + i*rowH + (r.total ? GAP : 0);
+    const scale = r.total ? maxTot : max;
+    if(r.total){
+      svg.appendChild(svgEl('line', { class:'grid', x1:PL-8, x2:W-8, y1:y-GAP/2, y2:y-GAP/2 }));
+    }
+    const name = svgEl('text', { x:PL-12, y:y+rowH/2+4, 'text-anchor':'end' });
+    name.setAttribute('fill', r.total ? 'var(--ink)' : 'var(--ink-2)');
+    if(r.total) name.setAttribute('font-weight','600');
+    const maxChars = narrow ? 11 : 20;
+    name.textContent = r.group.name.length > maxChars
+      ? r.group.name.slice(0, maxChars-1)+'…' : r.group.name;
+    svg.appendChild(name);
+
+    // доріжка плану
+    const pw = Math.max(0, track * (r.plan/scale));
+    if(pw > 0){
+      svg.appendChild(svgEl('rect', { x:PL, y:y+9, width:pw, height:rowH-26, rx:3,
+        fill:'var(--rule)', 'fill-opacity':0.9 }));
+    }
+    // смуга факту
+    const fw = Math.max(r.fact > 0 ? 3 : 0, track * (r.fact/scale));
+    if(fw > 0){
+      svg.appendChild(svgEl('rect', { x:PL, y:y+7, width:fw, height:rowH-22, rx:4, fill:barColor }));
+    }
+    // позначка плану
+    if(r.plan > 0){
+      svg.appendChild(svgEl('line', { x1:PL+pw, x2:PL+pw, y1:y+3, y2:y+rowH-9,
+        stroke:'var(--ink)', 'stroke-width':2 }));
+    }
+
+    // цифри праворуч від смуги: факт із плану
+    const nf = narrow ? (v => compactFmt.format(v)) : (v => numFmt.format(Math.round(v)));
+    const sum = svgEl('text', { x: narrow ? W-6 : W-118, y:y+rowH/2+4,
+      'text-anchor':'end', class:'val' });
+    sum.setAttribute('fill', r.fact > 0 ? 'var(--ink)' : 'var(--muted)');
+    if(r.total) sum.setAttribute('font-weight','600');
+    sum.textContent = nf(r.fact) + ' / ' + nf(r.plan) + ' €';
+    svg.appendChild(sum);
+
+    if(!narrow){
+      const over = kind === 'income' ? r.diff < 0 : r.diff > 0;
+      const t = svgEl('text', { x:W-8, y:y+rowH/2+4, 'text-anchor':'end', class:'val' });
+      t.setAttribute('fill', r.diff === 0 ? 'var(--muted)' : (over ? 'var(--crit)' : 'var(--good)'));
+      t.textContent = (r.diff > 0 ? '+' : '') + numFmt.format(Math.round(r.diff)) + ' €';
+      svg.appendChild(t);
+    }
+
+    const hit = svgEl('rect', { x:0, y:y, width:W, height:rowH, fill:'transparent' });
+    hit.addEventListener('mousemove', ev => showTip(box, tip, ev.clientX,
+      '<div class="t">'+esc(r.group.name)+'</div>'
+      +'<div class="row"><span class="k">план</span><span class="v">'+eur(r.plan)+'</span></div>'
+      +'<div class="row"><span class="k">факт</span><span class="v">'+eur(r.fact)+'</span></div>'
+      +'<div class="row" style="margin-top:4px"><span class="k">різниця</span><span class="v">'
+        +(r.diff>0?'+':'')+eur(r.diff)+'</span></div>'));
+    hit.addEventListener('mouseleave', () => tip.classList.remove('on'));
+    svg.appendChild(hit);
+  });
+}
+
+/* ══════════════════ відмальовка ══════════════════ */
+const CAT_VARS = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)','var(--c7)'];
+
+const signed = v => (v > 0 ? '+' : '') + eur(v);
+function diffClass(diff, kind){
+  if(Math.round(diff) === 0) return '';
+  const bad = kind === 'income' ? diff < 0 : diff > 0;
+  return bad ? 'over' : 'under';
+}
+
+/** Короткий висновок словами: що вибивається з плану найсильніше. */
+function analysisText(sum, kind){
+  if(!sum.rows.length && !sum.fact) return 'Немає даних за цей місяць.';
+  if(sum.plan <= 0){
+    return 'Планів на цей місяць ще немає — постав їх у розділі «Плани і статті», '
+      + 'і тут з\'явиться порівняння. Поки що '
+      + (kind === 'income' ? 'отримано ' : 'витрачено ') + eur(sum.fact) + '.';
+  }
+  const bad = sum.rows.filter(r => kind === 'income' ? r.diff < -1 : r.diff > 1)
+    .sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff));
+  const good = sum.rows.filter(r => kind === 'income' ? r.diff > 1 : r.diff < -1)
+    .sort((a,b) => Math.abs(b.diff) - Math.abs(a.diff));
+
+  const word = kind === 'income' ? 'недобір' : 'перевитрата';
+  const parts = [];
+
+  const total = kind === 'income'
+    ? (sum.diff >= 0
+        ? 'Надходження <b class="under">' + signed(sum.diff) + '</b> до плану.'
+        : 'Надходження <b class="over">' + signed(sum.diff) + '</b> від плану.')
+    : (sum.diff <= 0
+        ? 'Разом витрачено <b class="under">' + signed(sum.diff) + '</b> до плану.'
+        : 'Разом витрачено <b class="over">' + signed(sum.diff) + '</b> понад план.');
+  parts.push(total);
+
+  if(bad.length){
+    const head = word.charAt(0).toUpperCase() + word.slice(1) + ' у ' + bad.length + ' '
+      + (bad.length === 1 ? 'групі' : 'групах')
+      + (bad.length > 3 ? ', найбільші: ' : ': ');
+    parts.push(head
+      + bad.slice(0,3).map(r => esc(r.group.name) + ' <b class="over">' + signed(r.diff) + '</b>').join(', ') + '.');
+  }
+  if(good.length){
+    parts.push((kind === 'income' ? 'Понад план: ' : 'Заощаджено: ')
+      + good.slice(0,3).map(r => esc(r.group.name) + ' <b class="under">' + signed(r.diff) + '</b>').join(', ') + '.');
+  }
+  if(sum.orphan > 0){
+    parts.push('<b>' + eur(sum.orphan) + '</b> записано без статті — ці гроші є у факті, '
+      + 'але їх немає з чим порівняти.');
+  }
+  return parts.join(' ');
+}
+
+const shownCount = r => r.cats.filter(c => c.plan > 0 || c.fact > 0).length;
+
+function summaryTable(sum, kind){
+  if(!sum.rows.length) return '<div class="empty">Груп із планом або фактом за цей місяць немає.</div>';
+  let html = '<thead><tr><th>Група</th><th class="r">План</th><th class="r">Факт</th>'
+    + '<th class="r">Різниця</th><th class="r col-orig">%</th></tr></thead><tbody>';
+  sum.rows.forEach(r => {
+    const cls = diffClass(r.diff, kind);
+    html += '<tr><td>' + esc(r.group.name)
+      + (shownCount(r) > 1 ? '<span class="tx-sub">' + shownCount(r) + ' статей</span>' : '')
+      + '</td>'
+      + '<td class="r amt">' + eur(r.plan) + '</td>'
+      + '<td class="r amt">' + eur(r.fact) + '</td>'
+      + '<td class="r amt ' + (cls === 'over' ? 'debit' : cls === 'under' ? 'credit' : '') + '">'
+        + signed(r.diff) + '</td>'
+      + '<td class="r amt col-orig">' + (r.plan > 0 ? Math.round(r.pct) + '%' : '—') + '</td></tr>';
+    const shown = r.cats.filter(c => c.plan > 0 || c.fact > 0);
+    if(shown.length > 1){
+      shown.forEach(c => {
+        html += '<tr><td style="padding-left:16px" class="note">' + esc(c.cat.name) + '</td>'
+          + '<td class="r amt note">' + eur(c.plan) + '</td>'
+          + '<td class="r amt note">' + eur(c.fact) + '</td>'
+          + '<td class="r amt note">' + signed(c.diff) + '</td>'
+          + '<td class="r col-orig"></td></tr>';
+      });
+    }
+  });
+  if(sum.orphan > 0){
+    html += '<tr><td class="note">Без статті</td><td class="r amt note">—</td>'
+      + '<td class="r amt note">' + eur(sum.orphan) + '</td>'
+      + '<td class="r amt note">—</td><td class="r col-orig"></td></tr>';
+  }
+  html += '<tr class="month-sep"><td><strong>Разом</strong></td>'
+    + '<td class="r amt"><strong>' + eur(sum.plan) + '</strong></td>'
+    + '<td class="r amt"><strong>' + eur(sum.fact) + '</strong></td>'
+    + '<td class="r amt"><strong>' + signed(sum.diff) + '</strong></td>'
+    + '<td class="r amt col-orig">' + (sum.plan > 0 ? Math.round(sum.pct) + '%' : '—') + '</td></tr>';
+  return html + '</tbody>';
+}
+
+/**
+ * Місяці для графіка: від першого запису до найдальшого запланованого.
+ * Тому платіж, який очікується в жовтні, видно вже у вересні.
+ */
+function flowRows(){
+  const facts = monthlyFacts();
+  const keys = Object.keys(facts).sort();
+  let to = ymNow();
+  [S.month, latestPlannedMonth()].forEach(x => { if(x > to) to = x; });
+  let from = keys.length ? keys[0] : ymAdd(to, -3);
+  if(ymDiff(from, to) > 17) from = ymAdd(to, -17);
+  if(ymDiff(from, to) < 0) from = to;
+
+  const rows = [];
+  const n = ymDiff(from, to);
+  for(let m = 0; m <= n; m++){
+    const ym = ymAdd(from, m);
+    const f = facts[ym] || { income:0, expense:0 };
+    rows.push({
+      ym,
+      income: f.income, expense: f.expense,
+      planIncome: plannedFor(ym, 'income'),
+      planExpense: plannedFor(ym, 'expense'),
+      future: ym > ymNow(),
+    });
+  }
+  return rows;
+}
+
+function catRows(){
+  const sum = summary(S.month, 'expense');
+  let rows = sum.rows.filter(r => r.fact > 0)
+    .map(r => ({ label: r.group.name, value: r.fact }))
+    .sort((a,b) => b.value - a.value);
+  if(sum.orphan > 0) rows.push({ label:'Без статті', value: sum.orphan });
+  if(rows.length > 7){
+    const rest = rows.slice(6).reduce((s,r) => s + r.value, 0);
+    rows = rows.slice(0,6).concat([{ label:'Решта груп', value: rest }]);
+  }
+  rows.forEach((r,i) => r.color = CAT_VARS[i]);
+  return rows;
+}
+
+function renderOverview(){
+  const ym = S.month;
+  $('#mLabel').textContent = ymLabelLong(ym);
+  $('#pLabel').textContent = ymLabelLong(ym);
+  ['#mPick','#pPick'].forEach(sel => {
+    const el = $(sel);
+    if(el && document.activeElement !== el) el.value = ym;
+  });
+
+  const exp = summary(ym, 'expense');
+  const inc = summary(ym, 'income');
+  const avg = averages();
+  const proj = cushionProjection(avg);
+  const saved = Number(S.settings.cushionSaved) || 0;
+  const pct = proj.target > 0 ? clamp(saved/proj.target*100, 0, 100) : 0;
+
+  $('#tiles').innerHTML = [
+    '<div class="tile lead"><span class="eyebrow">Надходження, план</span>'
+      +'<span class="val" style="color:var(--credit)">'+eur(inc.plan)+'</span>'
+      +'<span class="hint">факт '+eur(inc.fact)+' · <span class="'+diffClass(inc.diff,'income')+'">'
+        +signed(inc.diff)+'</span></span></div>',
+    '<div class="tile debtline"><span class="eyebrow">Витрати, план</span>'
+      +'<span class="val" style="color:var(--debit)">'+eur(exp.plan)+'</span>'
+      +'<span class="hint">факт '+eur(exp.fact)+' · <span class="'+diffClass(exp.diff,'expense')+'">'
+        +signed(exp.diff)+'</span></span></div>',
+    '<div class="tile"><span class="eyebrow">Подушка</span>'
+      +'<span class="val">'+eur(saved)+'</span>'
+      +'<span class="hint">'+(proj.target>0 ? Math.round(pct)+'% від цілі '+eur(proj.target)
+        : 'ціль з\'явиться, коли будуть плани або витрати')+'</span></div>',
+  ].join('');
+
+  $('#expSub2').textContent = ymLabelLong(ym);
+  $('#incSub2').textContent = ymLabelLong(ym);
+  $('#expSub').textContent = exp.plan > 0 ? 'виконання плану ' + Math.round(exp.pct) + '%' : '';
+  drawPlanFact($('#expBox'), exp.rows, 'expense');
+  $('#expNote').innerHTML = analysisText(exp, 'expense');
+  $('#expTable').innerHTML = summaryTable(exp, 'expense');
+
+  $('#incSub').textContent = inc.plan > 0 ? 'виконання плану ' + Math.round(inc.pct) + '%' : '';
+  drawPlanFact($('#incBox'), inc.rows, 'income');
+  $('#incNote').innerHTML = analysisText(inc, 'income');
+  $('#incTable').innerHTML = summaryTable(inc, 'income');
+
+  const rows = flowRows();
+  $('#flowSub').textContent = rows.length
+    ? ymLabelLong(rows[0].ym) + ' — ' + ymLabelLong(rows[rows.length-1].ym) : '';
+  drawFlow($('#flowBox'), rows);
+  const done = rows.filter(r => !r.future);
+  const fut = rows.filter(r => r.future && (r.planIncome > 0 || r.planExpense > 0));
+  const pos = done.filter(r => r.income - r.expense >= 0).length;
+  const futTxt = fut.map(r => ymLabelLong(r.ym) + ': ' + eur(r.planIncome - r.planExpense)).join(', ');
+  $('#flowNote').innerHTML = done.length < 2 && !fut.length
+    ? 'Порівняння по місяцях з\'явиться, коли буде хоча б два місяці записів.'
+    : (done.length >= 2
+        ? 'З ' + done.length + ' прожитих місяців у плюс закрито <b>' + pos + '</b>. '
+          + 'Середні за останні ' + (avg.months || 0) + ' повних: надходження <b>' + eur(avg.income)
+          + '</b>, витрати <b>' + eur(avg.expense) + '</b>, вільними лишається <b class="'
+          + (proj.free >= 0 ? 'under' : 'over') + '">' + eur(proj.free) + '</b> на місяць. '
+        : '')
+      + (fut.length
+        ? 'Прозорі стовпчики — план; попереду ' + futTxt + '.'
+        : '');
+
+  const cats = catRows();
+  $('#catSub').textContent = cats.length ? ymLabelLong(ym) : '';
+  drawCats($('#catBox'), cats);
+
+  $('#cushSub').textContent = proj.reachedYm
+    ? 'ціль досягнута у ' + ymLabelLong(proj.reachedYm)
+    : (proj.target > 0 ? 'за поточним темпом ціль за 5 років не досягається' : '');
+  drawLine($('#cushBox'), proj.points.map(p => ({ ym:p.ym, value:p.saved })),
+    { color:'var(--good)', label:'накопичено', target: proj.target,
+      empty:'Потрібні дані хоча б за один повний місяць.' });
+}
+
+function renderTx(){
+  // список статей у формі — згруповано, під обраний тип
+  const sel = $('#txCat');
+  const kind = txKind;
+  const cur = sel.value;
+  let html = '';
+  groupsOf(kind).forEach(g => {
+    const cats = catsOf(g.id);
+    if(!cats.length) return;
+    html += '<optgroup label="'+esc(g.name)+'">'
+      + cats.map(c => '<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('')
+      + '</optgroup>';
+  });
+  sel.innerHTML = html || '<option value="">спершу створи статті</option>';
+  if(cur && sel.querySelector('option[value="'+cur+'"]')) sel.value = cur;
+
+  const items = S.tx.slice().sort((a,b) => (b.date+b.ts).localeCompare(a.date+a.ts));
+  $('#txSub').textContent = items.length ? items.length + ' записів' : '';
+  const t = $('#txTable');
+  if(!items.length){
+    t.innerHTML = '<tbody><tr><td><div class="empty">Журнал порожній. Перша операція — у формі вище.</div></td></tr></tbody>';
+    return;
+  }
+  let rows = '<thead><tr><th>Дата</th><th>Стаття</th><th class="col-who">Хто</th>'
+    + '<th class="r col-orig">Сума</th><th class="r">У євро</th><th></th></tr></thead><tbody>';
+  let lastYm = null;
+  items.forEach(it => {
+    const ym = String(it.date).slice(0,7);
+    const sep = ym !== lastYm; lastYm = ym;
+    const orig = it.currency === 'UAH' ? uah(it.amount) : eur2(it.amount);
+    const label = it.category || '—';
+    const grp = (it.groupName && it.groupName !== label) ? esc(it.groupName) + ' · ' : '';
+    rows += '<tr'+(sep?' class="month-sep"':'')+'>'
+      + '<td class="amt"><span class="d-full">'+esc(it.date)+'</span>'
+        +'<span class="d-short">'+esc(it.date.slice(8,10)+'.'+it.date.slice(5,7))+'</span></td>'
+      + '<td>'+grp+esc(label)+(it.note?' <span class="note">· '+esc(it.note)+'</span>':'')
+        +'<span class="tx-sub">'+esc(it.author||'—')
+        +(it.currency==='UAH' ? ' · '+esc(orig) : '')+'</span></td>'
+      + '<td class="note col-who">'+esc(it.author||'—')+'</td>'
+      + '<td class="r amt col-orig">'+esc(orig)+'</td>'
+      + '<td class="r amt '+(it.kind==='income'?'credit':'debit')+'">'
+        +(it.kind==='income'?'+':'−')+eur2(it.eur)+'</td>'
+      + '<td class="r"><button class="btn quiet needs-edit" data-del-tx="'+esc(it.id)+'">'
+        +'<span class="del-full">видалити</span><span class="del-short">×</span></button></td>'
+      + '</tr>';
+  });
+  t.innerHTML = rows + '</tbody>';
+}
+
+function planBlock(kind){
+  const ym = S.month;
+  const groups = groupsOf(kind);
+  if(!groups.length) return '<div class="empty">Груп ще немає — додай першу нижче.</div>';
+  return groups.map(g => {
+    const cats = catsOf(g.id);
+    const gplan = cats.reduce((s,c) => s + planFor(c, ym), 0);
+    return '<div class="plangroup">'
+      + '<div class="ghead"><h3>'+esc(g.name)+'</h3>'
+        + '<button class="btn quiet needs-edit ren" data-ren-group="'+esc(g.id)+'" '
+          + 'title="Перейменувати групу">перейменувати</button>'
+        + '<button class="btn quiet needs-edit delg" data-del-group="'+esc(g.id)+'" '
+          + 'title="Видалити групу">видалити</button>'
+        + '<span class="gsum">'+eur(gplan)+' на місяць</span></div>'
+      + '<div class="planhead"><span>Стаття</span><span>Сума, €</span>'
+        + '<span>Коли надійде</span><span></span></div>'
+      + (cats.length ? '' : '<div class="note" style="padding:8px 0">'
+          + 'У групі немає жодної статті — план ставиться на статтю. '
+          + 'Додай підгрупу нижче, наприклад «'+esc(g.name)+'».</div>')
+      + cats.map(c => {
+          const active = planFor(c, ym) > 0;
+          return '<div class="planrow'+(c.payMonth && !active ? ' dim' : '')+'">'
+            + '<div class="cname">'+esc(c.name)
+              + (c.payMonth ? '<span class="conly">лише '+ymLabelLong(c.payMonth)+'</span>' : '')
+              + '</div>'
+            + '<input class="num-in needs-edit" type="text" inputmode="decimal" '
+              + 'data-plan="'+esc(c.id)+'" value="'+(c.plan||0)+'">'
+            + '<input class="needs-edit paym" type="month" data-paym="'+esc(c.id)+'" '
+              + 'title="Порожньо — щомісяця" value="'+(c.payMonth||'')+'">'
+            + '<button class="btn quiet needs-edit" data-del-cat="'+esc(c.id)+'">×</button>'
+            + '</div>';
+        }).join('')
+      + '<form class="addcat" data-addcat="'+esc(g.id)+'">'
+        + '<input name="name" placeholder="+ підгрупа" required>'
+        + '<button class="btn ghost needs-edit" type="submit" title="Додати статтю">Додати</button>'
+      + '</form>'
+      + '</div>';
+  }).join('');
+}
+
+function renderPlans(){
+  $('#planExp').innerHTML = planBlock('expense');
+  $('#planInc').innerHTML = planBlock('income');
+}
+
+function renderGoals(){
+  const avg = averages();
+  const proj = cushionProjection(avg);
+  const saved = Number(S.settings.cushionSaved)||0;
+  const pct = proj.target > 0 ? clamp(saved/proj.target*100, 0, 100) : 0;
+
+  $('#cushionCard').innerHTML =
+      '<div class="tiles">'
+    + '<div class="tile"><span class="eyebrow">Зібрано</span><span class="val">'+eur(saved)+'</span>'
+      +'<span class="hint">'+Math.round(pct)+'% від цілі</span></div>'
+    + '<div class="tile"><span class="eyebrow">Ціль</span><span class="val">'+eur(proj.target)+'</span>'
+      +'<span class="hint">'+S.settings.cushionMonths+' міс. витрат</span></div>'
+    + '<div class="tile"><span class="eyebrow">Буде зібрано</span><span class="val" style="font-size:20px">'
+      +(proj.reachedYm?ymLabelLong(proj.reachedYm):'не за 5 років')+'</span>'
+      +'<span class="hint">за поточним темпом</span></div>'
+    + '</div>'
+    + '<div class="form" style="margin-top:14px">'
+      + '<div class="field"><label for="cushSaved">Скільки вже відкладено, €</label>'
+        +'<input type="text" inputmode="decimal" id="cushSaved" class="num-in needs-edit" value="'+saved+'"></div>'
+      + '<div class="field"><button class="btn needs-edit" id="cushSave" type="button">Зберегти</button></div>'
+    + '</div>';
+
+  const box = $('#goalList');
+  if(!S.goals.length){ box.innerHTML = '<div class="empty">Цілей поки немає.</div>'; return; }
+  box.innerHTML = '<div class="tablewrap"><table><thead><tr><th>Ціль</th><th class="r">Потрібно</th>'
+    + '<th class="r">Зібрано</th><th class="r">На місяць</th><th class="r">Буде готово</th><th></th></tr></thead><tbody>'
+    + S.goals.map(g => {
+        const need = Math.max(0, (Number(g.target)||0) - (Number(g.saved)||0));
+        const per = Number(g.monthly)||0;
+        const when = per > 0 ? ymLabelLong(ymAdd(ymNow(), Math.ceil(need/per))) : '—';
+        return '<tr><td>'+esc(g.name)+'</td>'
+          +'<td class="r amt">'+eur(g.target)+'</td>'
+          +'<td class="r amt">'+eur(g.saved)+'</td>'
+          +'<td class="r amt">'+eur(per)+'</td>'
+          +'<td class="r amt">'+(need<=0?'готово':when)+'</td>'
+          +'<td class="r"><button class="btn quiet needs-edit" data-del-goal="'+esc(g.id)+'">видалити</button></td></tr>';
+      }).join('')
+    + '</tbody></table></div>';
+}
+
+function renderSettings(){
+  const set = (id, v) => { const el = $(id); if(el && document.activeElement !== el) el.value = v; };
+  set('#stRate', S.settings.rateUahEur);
+  set('#stMonths', S.settings.cushionMonths);
+  set('#stAvg', S.settings.avgWindow);
+  set('#stMyName', S.me);
+  $('#meName').textContent = S.me || '—';
+
+  $('#hhName').textContent = S.household ? S.household.name : '—';
+  $('#hhCode').textContent = S.household ? S.household.join_code : '—';
+  $('#hhEmail').textContent = S.user ? S.user.email : '';
+  $('#hhMembers').innerHTML = S.members.map(m =>
+    '<span class="chip">'+esc(m.display_name || '—')
+    + (m.can_edit ? '' : ' · лише перегляд') + '</span>').join('');
+
+  $$('.needs-edit').forEach(el => { el.disabled = !S.canEdit; });
+
+  const avg = averages();
+  $('#methodNote').innerHTML =
+      '<p style="margin-top:0"><strong>План і факт.</strong> Базовий план статті діє щомісяця; '
+    + 'правка на місяць перекриває його тільки там. Факт — це сума внесених операцій '
+    + 'по цій статті за місяць. Різниця «факт мінус план»: для витрат плюс означає перевитрату, '
+    + 'для надходжень плюс — що отримали більше, ніж планували.</p>'
+    + '<p><strong>Зведення по групах.</strong> Статті всередині групи складаються. '
+    + 'Тому «Кредит1 Саша» і «Кредит2» разом дають рядок «Кредити».</p>'
+    + '<p><strong>Середні.</strong> Беруться '+S.settings.avgWindow+' останніх <em>повних</em> місяців — '
+    + (avg.months ? 'зараз є дані за '+avg.months+'. Середнє надходження '+eur(avg.income)
+                  +', середні витрати '+eur(avg.expense)+'.'
+                  : 'повних місяців ще немає, тому прогнози порожні.')
+    + ' Поточний місяць у середні не входить, бо він неповний.</p>'
+    + '<p><strong>Прогноз подушки.</strong> Вільні гроші = середні надходження мінус середні витрати '
+    + 'мінус те, що відкладається на цілі. Платежі по кредитах окремо не рахуються — '
+    + 'вони вже сидять у витратах як звичайні статті.</p>'
+    + '<p style="margin-bottom:0"><strong>Чого тут немає.</strong> Інфляції, зміни доходу і курсових коливань. '
+    + 'Це прогноз «якщо все залишиться як зараз», а не обіцянка.</p>';
+}
+
+let rafPending = false;
+function renderAll(){
+  if(rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    try{
+      if(!S.month) S.month = ymNow();
+      renderOverview(); renderTx(); renderPlans(); renderGoals(); renderSettings();
+    }catch(e){ console.error('render', e); }
+  });
+}
+
+/* ══════════════════ події ══════════════════ */
+function switchTab(id){
+  $$('.tab').forEach(b => {
+    const on = b.id === id;
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    $('#' + b.getAttribute('aria-controls')).hidden = !on;
+  });
+  if(id === 't-over') renderAll();
+}
+$$('.tab').forEach(b => b.addEventListener('click', () => switchTab(b.id)));
+
+/* ── вибір місяця (спільний для «Огляду» і «Планів») ── */
+function setMonth(ym){ S.month = ym; renderAll(); }
+['#mPrev','#pPrev'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymAdd(S.month, -1))));
+['#mNext','#pNext'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymAdd(S.month, 1))));
+['#mNow','#pNow'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymNow())));
+['#mPick','#pPick'].forEach(sel => $(sel).addEventListener('change', e => {
+  if(e.target.value) setMonth(e.target.value);
+}));
+
+let txKind = 'expense';
+function setKind(k){
+  txKind = k;
+  $('#kindExp').setAttribute('aria-pressed', k === 'expense' ? 'true' : 'false');
+  $('#kindInc').setAttribute('aria-pressed', k === 'income' ? 'true' : 'false');
+  renderTx();
+}
+$('#kindExp').addEventListener('click', () => setKind('expense'));
+$('#kindInc').addEventListener('click', () => setKind('income'));
+
+function flash(msg, bad){
+  const el = $('#txHint');
+  el.textContent = msg;
+  el.style.color = bad ? 'var(--crit)' : 'var(--good)';
+  setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+$('#txForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const date = $('#txDate').value || today();
+  const amount = num($('#txAmount').value);
+  if(!(amount > 0)) return flash('Сума має бути числом більшим за нуль. Кома і крапка — обидві годяться.', true);
+  const catId = $('#txCat').value;
+  const cat = catById(catId);
+  if(!cat) return flash('Спершу створи статтю в розділі «Плани і статті».', true);
+  const grp = groupById(cat.groupId);
+  const currency = $('#txCur').value;
+  const rate = Number(S.settings.rateUahEur) || 1;
+  const item = {
+    date, kind: txKind, amount,
+    currency, rate: currency === 'UAH' ? rate : 1,
+    eur: toEur(amount, currency, rate),
+    categoryId: cat.id, category: cat.name, groupName: grp ? grp.name : '',
+    note: ($('#txNote').value || '').trim(),
+    author: S.me || '—',
+  };
+  const btn = $('#txForm button[type=submit]');
+  btn.disabled = true;
+  try{
+    await addTx(item);
+    $('#txAmount').value = ''; $('#txNote').value = '';
+    flash('Записано: ' + eur2(item.eur) + ' — ' + cat.name);
+  }catch(e){ flash(e.message || 'Не вдалося записати.', true); }
+  finally{ btn.disabled = false; }
+});
+
+document.addEventListener('click', async ev => {
+  const t = ev.target.closest('button');
+  if(!t) return;
+
+  if(t.dataset.delTx){
+    t.disabled = true;
+    try{ await removeTx(t.dataset.delTx); }
+    catch(e){ t.disabled = false; alert(e.message); }
+    return;
+  }
+  if(t.dataset.delGoal){
+    try{ await removeRow('goals', t.dataset.delGoal); }catch(e){ alert(e.message); }
+    return;
+  }
+  if(t.dataset.delCat){
+    const c = catById(t.dataset.delCat);
+    if(!c) return;
+    const used = S.tx.filter(x => x.categoryId === c.id).length;
+    const msg = used
+      ? 'Видалити статтю «'+c.name+'»? '+used+' записів залишаться в журналі, '
+        + 'але випадуть із порівняння план/факт.'
+      : 'Видалити статтю «'+c.name+'»?';
+    if(!confirm(msg)) return;
+    try{ await removeRow('categories', c.id); }catch(e){ alert(e.message); }
+    return;
+  }
+  if(t.dataset.delGroup){
+    const g = groupById(t.dataset.delGroup);
+    if(!g) return;
+    const cats = catsOf(g.id);
+    const used = S.tx.filter(x => cats.some(c => c.id === x.categoryId)).length;
+    const msg = 'Видалити групу «'+g.name+'»'
+      + (cats.length ? ' разом із '+cats.length+' статтями' : '') + '?'
+      + (used ? '\n\n'+used+' записів залишаться в журналі, але випадуть із порівняння план/факт.' : '');
+    if(!confirm(msg)) return;
+    try{ await removeRow('groups', g.id); }catch(e){ alert(e.message); }
+    return;
+  }
+  if(t.dataset.renGroup){
+    const g = groupById(t.dataset.renGroup);
+    if(!g) return;
+    const name = prompt('Нова назва групи:', g.name);
+    if(name === null) return;
+    const v = name.trim();
+    if(!v) return;
+    try{ await renameGroup(g.id, v); }catch(e){ alert(e.message); }
+    return;
+  }
+  if(t.id === 'cushSave'){
+    try{ await saveSettings({ cushionSaved: num0($('#cushSaved').value) }); }
+    catch(e){ alert(e.message); }
+    return;
+  }
+});
+
+/* ── плани: зміни зберігаються, коли поле залишають ── */
+document.addEventListener('change', async ev => {
+  const el = ev.target;
+  if(el.dataset && el.dataset.plan){
+    const n = num(el.value);
+    if(isNaN(n) || n < 0){ el.value = 0; alert('Це має бути число. Кома і крапка — обидві годяться.'); return; }
+    try{ await saveCat(el.dataset.plan, { plan: n }); }
+    catch(e){ alert(e.message); }
+    return;
+  }
+  if(el.dataset && el.dataset.paym){
+    const v = String(el.value || '').trim();
+    try{ await saveCat(el.dataset.paym, { pay_month: v === '' ? null : v }); }
+    catch(e){ alert(e.message); }
+    return;
+  }
+});
+
+/* ── нові групи і статті ── */
+async function addGroupFrom(inputSel, kind){
+  const el = $(inputSel);
+  const name = (el.value || '').trim();
+  if(!name) return;
+  try{ await addGroup(kind, name); el.value = ''; }
+  catch(e){ alert(e.message); }
+}
+$('#groupFormExp').addEventListener('submit', ev => { ev.preventDefault(); addGroupFrom('#ngExp','expense'); });
+$('#groupFormInc').addEventListener('submit', ev => { ev.preventDefault(); addGroupFrom('#ngInc','income'); });
+
+document.addEventListener('submit', async ev => {
+  const f = ev.target.closest('form[data-addcat]');
+  if(!f) return;
+  ev.preventDefault();
+  const input = f.querySelector('input[name="name"]');
+  const name = ((input && input.value) || '').trim();
+  if(!name) return;
+  try{ await addCat(f.dataset.addcat, name); f.reset(); }
+  catch(e){ alert(e.message); }
+});
+
+/* ── налаштування ── */
+$('#stSave').addEventListener('click', async () => {
+  try{
+    await saveSettings({
+      rateUahEur: Math.max(0.01, num0($('#stRate').value) || DEFAULTS.rateUahEur),
+      cushionMonths: clamp(Math.round(num0($('#stMonths').value) || 6), 1, 24),
+      avgWindow: clamp(Math.round(num0($('#stAvg').value) || 6), 1, 24),
+    });
+  }catch(e){ alert(e.message); }
+});
+$('#stSaveMyName').addEventListener('click', async () => {
+  const v = ($('#stMyName').value||'').trim();
+  if(!v) return;
+  try{ await saveMyName(v); }catch(e){ alert(e.message); }
+});
+$('#hhRotate').addEventListener('click', async () => {
+  if(!confirm('Створити новий код запрошення? Старий перестане працювати.')) return;
+  const { data, error } = await sb.rpc('rotate_join_code', { p_household: S.household.id });
+  if(error) return alert(dbError(error));
+  S.household.join_code = data;
+  renderSettings();
+});
+$('#signOut').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+$('#goalForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  try{
+    await saveGoal({
+      name: $('#glName').value.trim() || 'Ціль',
+      target: num0($('#glTarget').value),
+      saved: num0($('#glSaved').value),
+      monthly: num0($('#glMonthly').value),
+    });
+  }catch(e){ return alert(e.message); }
+  $('#goalForm').reset();
+});
+
+let resizeT = null, lastW = window.innerWidth;
+window.addEventListener('resize', () => {
+  if(Math.abs(window.innerWidth - lastW) < 24) return;
+  lastW = window.innerWidth;
+  clearTimeout(resizeT);
+  resizeT = setTimeout(renderAll, 180);
+});
+
+/* ══════════════════ форми входу ══════════════════ */
+function wireAuth(){
+  let mode = 'signin';
+  const setMode = m => {
+    mode = m;
+    $('#tabSignin').setAttribute('aria-pressed', m === 'signin' ? 'true' : 'false');
+    $('#tabSignup').setAttribute('aria-pressed', m === 'signup' ? 'true' : 'false');
+    $('#auSubmit').textContent = m === 'signin' ? 'Увійти' : 'Створити акаунт';
+    $('#auPass').setAttribute('autocomplete', m === 'signin' ? 'current-password' : 'new-password');
+    authMsg('');
+  };
+  $('#tabSignin').addEventListener('click', () => setMode('signin'));
+  $('#tabSignup').addEventListener('click', () => setMode('signup'));
+
+  $('#authForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const email = $('#auEmail').value.trim();
+    const password = $('#auPass').value;
+    const btn = $('#auSubmit');
+    btn.disabled = true; authMsg('Хвилинку…');
+    try{
+      const { data, error } = mode === 'signin'
+        ? await sb.auth.signInWithPassword({ email, password })
+        : await sb.auth.signUp({ email, password });
+      if(error) throw error;
+      if(mode === 'signup' && data.user && !data.session){
+        authMsg('Акаунт створено. Підтверди пошту — лист від Supabase уже в дорозі, потім увійди.');
+        setMode('signin');
+      } else {
+        authMsg('');
+      }
+    }catch(e){ authMsg(dbError(e), true); }
+    finally{ btn.disabled = false; }
+  });
+
+  $('#createForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    setupMsg('Створюю…');
+    const { data, error } = await sb.rpc('create_household', {
+      p_name: $('#crName').value.trim(),
+      p_display_name: $('#crMe').value.trim(),
+    });
+    if(error){ setupMsg(dbError(error), true); return; }
+    setupMsg('');
+    await handleSession((await sb.auth.getSession()).data.session);
+  });
+
+  $('#joinForm').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    setupMsg('Приєдную…');
+    const { error } = await sb.rpc('join_household', {
+      p_code: $('#jnCode').value.trim(),
+      p_display_name: $('#jnMe').value.trim(),
+      p_can_edit: true,
+    });
+    if(error){ setupMsg(dbError(error), true); return; }
+    setupMsg('');
+    await handleSession((await sb.auth.getSession()).data.session);
+  });
+
+  $('#setupSignOut').addEventListener('click', async () => {
+    await sb.auth.signOut(); location.reload();
+  });
+}
+
+/* ══════════════════ старт ══════════════════ */
+$('#txDate').value = today();
+setKind('expense');
+wireAuth();
+boot();
+
+})();
+</script>
+
+</body>
+</html>
