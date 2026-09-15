@@ -207,6 +207,41 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--credit);outline-
 .btn.danger{background:transparent;border-color:color-mix(in srgb,var(--crit) 45%,transparent);color:var(--crit)}
 .btn:focus-visible{outline:2px solid var(--credit);outline-offset:2px}
 
+/* ─────────── пароль ─────────── */
+.passwrap{position:relative;display:block}
+.passwrap input{width:100%;padding-right:44px}
+.eye{
+  position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  width:36px;height:36px;display:grid;place-items:center;
+  background:none;border:0;border-radius:8px;cursor:pointer;color:var(--muted);
+}
+.eye:hover{color:var(--ink);background:var(--rule-soft)}
+.eye:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.eye svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.eye .e-slash{display:none}
+.eye[aria-pressed="true"] .e-slash{display:block}
+.pwreq{
+  list-style:none;margin:10px 0 0;padding:0;
+  display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;
+  font-size:12.5px;color:var(--muted)
+}
+.pwreq[hidden],.pwstate[hidden]{display:none}
+@media (max-width:420px){ .pwreq{grid-template-columns:1fr} }
+.pwreq li{display:flex;align-items:center;gap:7px;line-height:1.35}
+.pwreq i{
+  flex:0 0 auto;width:14px;height:14px;border-radius:50%;
+  border:1.5px solid var(--rule);position:relative
+}
+.pwreq li.ok{color:var(--good)}
+.pwreq li.ok i{border-color:var(--good);background:var(--good)}
+.pwreq li.ok i::after{
+  content:'';position:absolute;left:4px;top:1px;width:4px;height:8px;
+  border:solid var(--surface);border-width:0 1.6px 1.6px 0;transform:rotate(45deg)
+}
+.pwstate{margin-top:9px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.pwstate.ok{color:var(--good)}
+
 /* ─────────── графіки ─────────── */
 .chartbox{position:relative}
 svg.chart{display:block;width:100%;height:auto;overflow:visible}
@@ -352,9 +387,26 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
           <label for="auEmail">Пошта</label>
           <input type="email" id="auEmail" autocomplete="email" required>
         </div>
-        <div class="field" style="margin-bottom:14px">
+        <div class="field" style="margin-bottom:10px">
           <label for="auPass">Пароль</label>
-          <input type="password" id="auPass" autocomplete="current-password" minlength="6" required>
+          <div class="passwrap">
+            <input type="password" id="auPass" autocomplete="current-password" required>
+            <button type="button" id="auEye" class="eye" aria-label="Показати пароль"
+              aria-pressed="false" title="Показати пароль">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path class="e-open" d="M1.8 12S5.4 5.5 12 5.5 22.2 12 22.2 12 18.6 18.5 12 18.5 1.8 12 1.8 12z"/>
+                <circle class="e-open" cx="12" cy="12" r="3.2"/>
+                <path class="e-slash" d="M4 20 20 4"/>
+              </svg>
+            </button>
+          </div>
+          <ul class="pwreq" id="pwReq" hidden>
+            <li data-rule="len"><i></i>не менше 8 знаків</li>
+            <li data-rule="low"><i></i>мала літера</li>
+            <li data-rule="up"><i></i>велика літера</li>
+            <li data-rule="sym"><i></i>спеціальний символ (!?%$#@ тощо)</li>
+          </ul>
+          <div class="pwstate" id="pwState" hidden></div>
         </div>
         <button class="btn" type="submit" id="auSubmit" style="width:100%">Увійти</button>
       </form>
@@ -2058,6 +2110,26 @@ window.addEventListener('resize', () => {
 });
 
 /* ══════════════════ форми входу ══════════════════ */
+/** Вимоги до нового пароля. Перевіряються при реєстрації. */
+const PW_RULES = {
+  len: v => v.length >= 8,
+  low: v => /[a-zа-яіїєґ]/.test(v),
+  up:  v => /[A-ZА-ЯІЇЄҐ]/.test(v),
+  sym: v => /[^\p{L}\p{N}]/u.test(v),
+};
+const pwOk = v => Object.values(PW_RULES).every(f => f(v));
+
+/** Малює галочки біля вимог і підсумковий рядок. */
+function paintPw(){
+  const v = $('#auPass').value;
+  $('#pwReq').querySelectorAll('li').forEach(li => {
+    li.classList.toggle('ok', PW_RULES[li.dataset.rule](v));
+  });
+  const st = $('#pwState'), ok = pwOk(v);
+  st.classList.toggle('ok', ok);
+  st.textContent = !v ? '' : (ok ? '✓ Пароль відповідає вимогам' : 'Пароль ще не відповідає вимогам');
+}
+
 function wireAuth(){
   let mode = 'signin';
   const setMode = m => {
@@ -2066,16 +2138,39 @@ function wireAuth(){
     $('#tabSignup').setAttribute('aria-pressed', m === 'signup' ? 'true' : 'false');
     $('#auSubmit').textContent = m === 'signin' ? 'Увійти' : 'Створити акаунт';
     $('#auPass').setAttribute('autocomplete', m === 'signin' ? 'current-password' : 'new-password');
+    $('#pwReq').hidden = m !== 'signup';
+    $('#pwState').hidden = m !== 'signup';
+    if(m === 'signup') paintPw();
     authMsg('');
   };
   $('#tabSignin').addEventListener('click', () => setMode('signin'));
   $('#tabSignup').addEventListener('click', () => setMode('signup'));
+
+  /* ── око: показати/сховати пароль ── */
+  $('#auEye').addEventListener('click', () => {
+    const inp = $('#auPass'), eye = $('#auEye');
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    eye.setAttribute('aria-pressed', show ? 'true' : 'false');
+    eye.setAttribute('aria-label', show ? 'Сховати пароль' : 'Показати пароль');
+    eye.title = show ? 'Сховати пароль' : 'Показати пароль';
+    inp.focus();
+  });
+
+  /* ── вимоги до пароля: живий індикатор ── */
+  $('#auPass').addEventListener('input', () => { if(mode === 'signup') paintPw(); });
 
   $('#authForm').addEventListener('submit', async ev => {
     ev.preventDefault();
     const email = $('#auEmail').value.trim();
     const password = $('#auPass').value;
     const btn = $('#auSubmit');
+    if(mode === 'signup' && !pwOk(password)){
+      paintPw();
+      authMsg('Пароль не відповідає вимогам — дивись список під полем.', true);
+      $('#auPass').focus();
+      return;
+    }
     btn.disabled = true; authMsg('Хвилинку…');
     try{
       const { data, error } = mode === 'signin'
