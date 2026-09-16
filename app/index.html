@@ -101,7 +101,7 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
-.shell{max-width:1140px;margin:0 auto;padding-inline:20px;padding-block:20px 64px}
+.shell{max-width:1140px;margin:0 auto;padding-inline:20px;padding-block:14px 64px}
 @media (max-width:520px){ .shell{padding-inline:16px} }
 
 h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0}
@@ -116,18 +116,30 @@ h3{font-size:16px}
 
 /* ─────────── шапка ─────────── */
 .top{
-  display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;
-  padding-bottom:16px;border-bottom:1px solid var(--rule);
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding-bottom:12px;
 }
-.top .who{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.brand-sub{color:var(--muted);font-size:13px;margin-top:2px}
+.top h1{font-size:23px;line-height:1.15}
+.top .who{margin-left:auto;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 
 .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
 .dot.live{background:var(--good)}
 .sync{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
 
 /* ─────────── вкладки ─────────── */
-.tabs{display:flex;gap:2px;margin:18px 0 22px;flex-wrap:wrap}
+.tabs{
+  display:flex;gap:2px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:20;
+  margin:0 -20px 20px;padding:9px 20px;
+  background:var(--paper);border-bottom:1px solid var(--rule);
+}
+@media (max-width:760px){
+  /* на вузькому екрані бар не переноситься, а гортається вбік */
+  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;white-space:nowrap}
+}
+@media (max-width:520px){ .tabs{margin-inline:-16px;padding-inline:16px} }
 .tab{
   appearance:none;border:0;background:transparent;cursor:pointer;
   font-family:var(--body);font-size:14px;font-weight:600;color:var(--muted);
@@ -371,7 +383,6 @@ hr.sep{border:0;border-top:1px solid var(--rule);margin:16px 0}
 /* ── телефон ── */
 @media (max-width:560px){
   h1{font-size:21px}
-  .brand-sub{display:none}
   .top{padding-bottom:12px;gap:10px}
   .top .who{margin-left:0;width:100%;align-items:center;justify-content:space-between}
   .top .who .field{flex-direction:row;align-items:baseline;gap:8px;min-width:0}
@@ -407,7 +418,7 @@ hr.sep{border:0;border-top:1px solid var(--rule);margin:16px 0}
 .authwrap{max-width:440px;margin:6vh auto 0}
 .authbrand h1{font-size:24px}
 .authbrand .note{margin:6px 0 0}
-.whoname{font-family:var(--mono);font-size:15px;font-weight:500;padding-top:4px}
+.whoname{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink-2)}
 .code{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:.12em;color:var(--credit)}
 code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
   border:1px solid var(--rule);border-radius:5px;padding:1px 5px}
@@ -499,15 +510,9 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
 <div class="shell" id="screen-app" hidden>
 
   <header class="top">
-    <div>
-      <h1>Сімейний бюджет</h1>
-      <div class="brand-sub">Спільний бюджет — надходження, борги, подушка, прогноз</div>
-    </div>
+    <h1>Сімейний бюджет</h1>
     <div class="who">
-      <div class="field" style="min-width:120px">
-        <label>Записи підписує</label>
-        <div class="whoname" id="meName">—</div>
-      </div>
+      <span class="whoname" id="meName">—</span>
       <span class="sync"><span class="dot" id="syncDot"></span><span id="syncText">під'єднання…</span></span>
     </div>
   </header>
