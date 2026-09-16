@@ -41,6 +41,13 @@ ok "Єва НЕ бачить складу чужої сім'ї"  "$(asuser $EVE 
 ok "Єва НЕ бачить чужих груп"           "$(asuser $EVE 'select count(*) from groups')" "0"
 ok "Єва НЕ бачить чужих статей"         "$(asuser $EVE 'select count(*) from categories')" "0"
 ok "Єва НЕ бачить чужих планів"         "$(asuser $EVE 'select count(*) from plan_overrides')" "0"
+asuser $ALICE "insert into tasks(household_id,due_date,due_time,title) values ('$H1','2026-09-20','10:00','Сплатити оренду')" >/dev/null
+ok "Боб бачить завдання Аліси"          "$(asuser $BOB 'select count(*) from tasks')" "1"
+ok "Єва НЕ бачить чужих завдань"        "$(asuser $EVE 'select count(*) from tasks')" "0"
+okfail "Єва не може створити завдання в чужій сім'ї" \
+  "$(asuser $EVE "insert into tasks(household_id,due_date,title) values ('$H1','2026-09-21','Hack')")"
+asuser $EVE "update tasks set done=true where household_id='$H1'" >/dev/null
+ok "Завдання Аліси не позначене чужим"  "$(asuser $ALICE 'select count(*) from tasks where done')" "0"
 
 okfail "Єва не може вписати операцію в чужу сім'ю" \
   "$(asuser $EVE "insert into transactions(household_id,date,kind,amount,currency,rate,eur,category,author) values ('$H1','2026-09-03','expense',9999,'EUR',1,9999,'Hack','Eve')")"

@@ -27,6 +27,9 @@
   --good:#1F6F4A;
   --warn:#A8761C;
   --crit:#A8322A;
+  --done-bg:#DFF3E4;   /* виконане завдання */
+  --done-line:#12874F;
+  --done-ink:#0E5F38;
 
   --c1:#2E5E9E; --c2:#C0562F; --c3:#8B4E9C; --c4:#0F8A5F;
   --c5:#B08A1E; --c6:#C4436B; --c7:#0089A3;
@@ -53,6 +56,9 @@
     --good:#4FB286;
     --warn:#D0A24A;
     --crit:#E0776C;
+    --done-bg:#16452F;
+    --done-line:#39C77E;
+    --done-ink:#8FE6B8;
 
     --c1:#4E80C4; --c2:#D0714A; --c3:#A268B5; --c4:#1FA06F;
     --c5:#AE8A22; --c6:#D75B7F; --c7:#16A0B8;
@@ -75,6 +81,9 @@
   --good:#4FB286;
   --warn:#D0A24A;
   --crit:#E0776C;
+  --done-bg:#16452F;
+  --done-line:#39C77E;
+  --done-ink:#8FE6B8;
 
   --c1:#4E80C4; --c2:#D0714A; --c3:#A268B5; --c4:#1FA06F;
   --c5:#AE8A22; --c6:#D75B7F; --c7:#16A0B8;
@@ -290,10 +299,7 @@ hr.sep{border:0;border-top:1px solid var(--rule);margin:16px 0}
 .analysis .over{color:var(--crit)}
 .analysis .under{color:var(--good)}
 
-.planrow .conly{display:block;font-size:12px;color:var(--muted);margin-top:1px}
-.planrow .paym{min-height:36px;padding:5px 8px;font-size:13px;font-family:var(--mono);
-  background:var(--surface-2)}
-.planrow.dim{opacity:.62}
+.planrow.dim{opacity:.55}
 .mpick{width:auto;min-height:34px;padding:4px 8px;font-size:13.5px;
   font-family:var(--mono);background:var(--surface-2)}
 
@@ -303,7 +309,7 @@ hr.sep{border:0;border-top:1px solid var(--rule);margin:16px 0}
 .addcat button{min-height:34px;padding:5px 14px;font-size:13.5px;white-space:nowrap}
 
 /* рядки планів */
-.planrow{display:grid;grid-template-columns:1fr 120px 120px auto;gap:10px;align-items:center;
+.planrow{display:grid;grid-template-columns:1fr 140px auto;gap:10px;align-items:center;
   padding:8px 0;border-top:1px solid var(--rule-soft)}
 .planrow input{min-height:36px;padding:6px 9px;font-size:14px}
 .planrow .cname{min-width:0;overflow-wrap:anywhere}
@@ -312,12 +318,50 @@ hr.sep{border:0;border-top:1px solid var(--rule);margin:16px 0}
 .plangroup .ghead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .plangroup .ghead h3{font-size:16px}
 .plangroup .gsum{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--muted)}
-.planhead{display:grid;grid-template-columns:1fr 120px 120px auto;gap:10px;
+/* ─────────── завдання ─────────── */
+.tasks{display:flex;flex-direction:column;gap:8px}
+.task{
+  display:grid;grid-template-columns:auto 92px 1fr auto;gap:12px;align-items:center;
+  padding:11px 13px;border:1px solid var(--rule);border-radius:12px;background:var(--surface);
+  transition:background .12s,border-color .12s;
+}
+.task .when{font-family:var(--mono);font-size:13px;color:var(--ink-2);white-space:nowrap}
+.task .what{min-width:0;overflow-wrap:anywhere;font-weight:500}
+.task .what small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.task .tools{display:flex;gap:4px;align-items:center}
+.task .chk{
+  width:22px;height:22px;flex:0 0 auto;border:2px solid var(--rule);border-radius:7px;
+  background:none;cursor:pointer;display:grid;place-items:center;padding:0;color:transparent;
+}
+.task .chk:hover{border-color:var(--good)}
+.task.done{background:var(--done-bg);border-color:var(--done-line)}
+.task.done .chk{background:var(--done-line);border-color:var(--done-line);color:#fff}
+.task.done .what{color:var(--done-ink)}
+.task.done .when{color:var(--done-ink)}
+.task.late:not(.done){border-color:var(--crit)}
+.task.late:not(.done) .when{color:var(--crit)}
+.task .chk svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:3;
+  stroke-linecap:round;stroke-linejoin:round}
+.daysep{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  margin:10px 0 2px}
+.task .cal-short{display:none}
+@media (max-width:560px){
+  .task{grid-template-columns:auto 1fr auto;gap:4px 9px;padding:10px}
+  .task .when{grid-column:2;grid-row:1;font-size:12px}
+  .task .what{grid-column:2;grid-row:2}
+  .task .tools{grid-column:3;grid-row:1/3;align-self:start;gap:2px}
+  .task .cal-full{display:none}
+  .task .cal-short{display:inline}
+}
+.copybar{gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.copybar .cp-short{display:none}
+@media (max-width:620px){ .copybar .cp-full{display:none} .copybar .cp-short{display:inline} }
+.planhead{display:grid;grid-template-columns:1fr 140px auto;gap:10px;
   font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-bottom:4px}
 @media (max-width:620px){
   .plangroup .ren{font-size:0;padding:4px 6px}
   .plangroup .ren::after{content:'✎';font-size:14px}
-  .planrow,.planhead{grid-template-columns:1fr 84px 84px auto;gap:6px}
+  .planrow,.planhead{grid-template-columns:1fr 92px auto;gap:6px}
   .planrow input{font-size:13px;padding:5px 7px}
   .planhead{font-size:10px}
 }
@@ -473,6 +517,7 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
     <button class="tab" role="tab" id="t-tx"    aria-selected="false" aria-controls="p-tx">Операції</button>
     <button class="tab" role="tab" id="t-plan"  aria-selected="false" aria-controls="p-plan">Плани і статті</button>
     <button class="tab" role="tab" id="t-goals" aria-selected="false" aria-controls="p-goals">Подушка й цілі</button>
+    <button class="tab" role="tab" id="t-task"  aria-selected="false" aria-controls="p-task">Завдання</button>
     <button class="tab" role="tab" id="t-set"   aria-selected="false" aria-controls="p-set">Налаштування</button>
   </div>
 
@@ -604,6 +649,10 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
         <h2>Витрати</h2>
         <span class="sub">план на місяць по статтях</span>
       </div>
+      <div class="rowflex copybar">
+        <button class="btn ghost needs-edit" type="button" data-copy="expense"><span class="cp-full">Скопіювати з попереднього місяця</span><span class="cp-short">← копіювати</span></button>
+        <span class="sub" id="planExpHint"></span>
+      </div>
       <div id="planExp"></div>
       <hr class="sep">
       <form class="form" id="groupFormExp">
@@ -619,6 +668,10 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
       <div class="card-head">
         <h2>Надходження</h2>
         <span class="sub">план на місяць по статтях</span>
+      </div>
+      <div class="rowflex copybar">
+        <button class="btn ghost needs-edit" type="button" data-copy="income"><span class="cp-full">Скопіювати з попереднього місяця</span><span class="cp-short">← копіювати</span></button>
+        <span class="sub" id="planIncHint"></span>
       </div>
       <div id="planInc"></div>
       <hr class="sep">
@@ -654,12 +707,13 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
     <div class="card">
       <div class="card-head"><h2>Як це працює</h2></div>
       <div class="note">
-        <p style="margin-top:0"><strong>Сума</strong> — скільки планується по цій статті.
-        Поставив «Їжа — 600 €» — і кожен місяць порівнюється з шістьмастами.</p>
-        <p><strong>Коли надійде</strong> — порожньо означає «щомісяця». Якщо поставити місяць,
-        сума планується <em>тільки</em> в ньому: гроші від одного джерела чекаєш у вересні,
-        від іншого — у жовтні, і на графіку «Надходження проти витрат» це видно
-        саме в тих місяцях.</p>
+        <p style="margin-top:0"><strong>Кожен місяць живе окремо.</strong> Сума, яку ти
+        ставиш, належить тільки тому місяцю, що вибраний угорі. Виправив жовтень —
+        вересень лишився недоторканим, разом зі своєю аналітикою.</p>
+        <p><strong>Скопіювати з попереднього місяця</strong> переносить усі суми
+        минулого місяця в цей, щоб не набирати щоразу заново — далі правиш, що змінилось.
+        Порожня сума означає, що цього місяця по статті нічого не планується:
+        гроші від одного джерела чекаєш у вересні, від іншого — у жовтні.</p>
         <p><strong>Підгрупи.</strong> Усередині групи можна завести скільки завгодно статей:
         у «Кредитах» — «Кредит1 Саша», «Авто в лізинг»; у «Їжі» — «Продукти», «Кафе».
         У зведенні вони збираються назад у свою групу.</p>
@@ -701,6 +755,54 @@ code{font-family:var(--mono);font-size:13px;background:var(--surface-2);
       </form>
       <hr class="sep">
       <div id="goalList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-task" role="tabpanel" aria-labelledby="t-task" hidden>
+    <div class="monthbar">
+      <button class="btn quiet mnav" id="kPrev" type="button" aria-label="Попередній місяць">←</button>
+      <div class="mlabel" id="kLabel">—</div>
+      <button class="btn quiet mnav" id="kNext" type="button" aria-label="Наступний місяць">→</button>
+      <input type="month" class="mpick" id="kPick" aria-label="Обрати місяць">
+      <button class="btn quiet" id="kNow" type="button">цей місяць</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Нове завдання</h2>
+        <span class="sub" id="taskSub"></span>
+      </div>
+      <form id="taskForm">
+        <div class="form">
+          <div class="field field-title">
+            <label for="tkTitle">Що зробити</label>
+            <input id="tkTitle" placeholder="Сплатити оренду" required>
+          </div>
+          <div class="field">
+            <label for="tkDate">Дата</label>
+            <input type="date" id="tkDate" required>
+          </div>
+          <div class="field">
+            <label for="tkTime">Час</label>
+            <input type="time" id="tkTime">
+          </div>
+          <div class="field"><button class="btn needs-edit" type="submit">Додати</button></div>
+        </div>
+        <div class="note" style="margin-top:8px">Час не обов'язковий — без нього завдання на весь день.</div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Завдання місяця</h2>
+        <span class="sub" id="taskCount"></span>
+      </div>
+      <div id="taskList"></div>
+      <hr class="sep">
+      <div class="rowflex" style="gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="btn ghost" id="icsMonth" type="button">Завантажити для календаря (.ics)</button>
+        <span class="sub">файл відкривається в Google Календарі, Apple Календарі й Outlook</span>
+      </div>
     </div>
   </section>
 
@@ -864,7 +966,7 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c =>
 const DEFAULTS = { rateUahEur: 48.5, cushionMonths: 6, avgWindow: 6, cushionSaved: 0, cushionMonthly: 0 };
 const S = {
   settings: Object.assign({}, DEFAULTS),
-  tx: [], goals: [], members: [],
+  tx: [], goals: [], members: [], plans: {}, tasks: [],
   groups: [], cats: [],
   month: '',                             // місяць, який дивимось
   household: null,
@@ -919,11 +1021,14 @@ const rowGroup = r => ({ id:r.id, kind:r.kind, name:r.name, sort:Number(r.sort)|
 const rowCat = r => ({
   id: r.id, groupId: r.group_id, name: r.name,
   plan: Number(r.plan) || 0, note: r.note || '', sort: Number(r.sort) || 100,
-  payMonth: r.pay_month || null,   // null = планується щомісяця
 });
 const rowGoal = r => ({
   id: r.id, name: r.name, target: Number(r.target), saved: Number(r.saved),
   monthly: Number(r.monthly), demo: !!r.demo,
+});
+const rowTask = r => ({
+  id: r.id, date: r.due_date, time: r.due_time || '', title: r.title || '',
+  note: r.note || '', done: !!r.done,
 });
 
 /* ── читання ── */
@@ -931,21 +1036,26 @@ let seeding = false;
 async function loadAll(){
   if(!S.household) return;
   const h = S.household.id;
-  const [tx, groups, cats, goals, st, mem] = await Promise.all([
+  const [tx, groups, cats, plans, goals, st, mem, tasks] = await Promise.all([
     sb.from('transactions').select('*').eq('household_id', h).order('date', { ascending:false }),
     sb.from('groups').select('*').eq('household_id', h).eq('archived', false),
     sb.from('categories').select('*').eq('household_id', h).eq('archived', false),
+    sb.from('plan_overrides').select('*').eq('household_id', h),
     sb.from('goals').select('*').eq('household_id', h),
     sb.from('settings').select('*').eq('household_id', h).maybeSingle(),
     sb.from('household_members').select('*').eq('household_id', h),
+    sb.from('tasks').select('*').eq('household_id', h).order('due_date', { ascending:true }),
   ]);
-  const first = [tx, groups, cats, goals, st, mem].find(r => r.error);
+  const first = [tx, groups, cats, plans, goals, st, mem, tasks].find(r => r.error);
   if(first){ setSync('off', dbError(first.error)); return; }
 
   S.tx = (tx.data || []).map(rowTx);
   S.groups = (groups.data || []).map(rowGroup).sort((a,b) => a.sort - b.sort || a.name.localeCompare(b.name,'uk'));
   S.cats = (cats.data || []).map(rowCat).sort((a,b) => a.sort - b.sort || a.name.localeCompare(b.name,'uk'));
   S.goals = (goals.data || []).map(rowGoal);
+  S.plans = {};
+  (plans.data || []).forEach(r => { S.plans[r.category_id + '|' + r.month] = Number(r.plan) || 0; });
+  S.tasks = (tasks.data || []).map(rowTask);
   S.members = mem.data || [];
   const d = st.data || {};
   S.settings = {
@@ -977,7 +1087,8 @@ function subscribe(){
   let t = null;
   const bump = () => { clearTimeout(t); t = setTimeout(loadAll, 250); };
   channel = sb.channel('fb-' + h);
-  ['transactions','groups','categories','goals','settings','household_members'].forEach(table => {
+  ['transactions','groups','categories','plan_overrides','goals','settings',
+   'household_members','tasks'].forEach(table => {
     channel.on('postgres_changes',
       { event:'*', schema:'public', table, filter:'household_id=eq.' + h }, bump);
   });
@@ -1007,6 +1118,55 @@ async function removeTx(id){
   if(error) throw new Error(dbError(error));
   await loadAll();
 }
+/** План статті на конкретний місяць. 0 — прибираємо рядок зовсім. */
+async function savePlan(catId, ym, amount){
+  guard();
+  if(amount > 0){
+    const { error } = await sb.from('plan_overrides').upsert({
+      household_id: S.household.id, category_id: catId, month: ym, plan: amount,
+    }, { onConflict: 'category_id,month' });
+    if(error) throw new Error(dbError(error));
+  } else {
+    const { error } = await sb.from('plan_overrides').delete()
+      .eq('category_id', catId).eq('month', ym);
+    if(error) throw new Error(dbError(error));
+  }
+  await loadAll();
+}
+
+/** Переносить усі плани попереднього місяця в поточний. Уже заповнене не чіпає. */
+async function copyPlansFrom(prevYm, ym, kind){
+  guard();
+  const rows = [];
+  groupsOf(kind).forEach(g => catsOf(g.id).forEach(c => {
+    const from = Number(S.plans[planKey(c.id, prevYm)]) || 0;
+    if(from > 0) rows.push({ household_id: S.household.id, category_id: c.id, month: ym, plan: from });
+  }));
+  if(!rows.length) throw new Error('У ' + ymLabelLong(prevYm).toLowerCase() + ' планів не було — копіювати нічого.');
+  const { error } = await sb.from('plan_overrides').upsert(rows, { onConflict: 'category_id,month' });
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+  return rows.length;
+}
+
+/* ── завдання ── */
+async function addTask(t){
+  guard();
+  const { error } = await sb.from('tasks').insert({
+    household_id: S.household.id, due_date: t.date, due_time: t.time || '',
+    title: t.title, note: t.note || '', created_by: S.user.id,
+  });
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+async function toggleTask(id, done){
+  guard();
+  const { error } = await sb.from('tasks')
+    .update({ done, done_at: done ? new Date().toISOString() : null }).eq('id', id);
+  if(error) throw new Error(dbError(error));
+  await loadAll();
+}
+
 async function saveGoal(g){
   guard();
   const { error } = await sb.from('goals').insert({
@@ -1136,15 +1296,19 @@ const toEur = (amount, currency, rate) =>
  * Без позначки місяця сума планується щомісяця.
  * З позначкою — тільки в тому місяці, в інших нуль.
  */
+function planKey(catId, ym){ return catId + '|' + ym; }
+/** План статті на конкретний місяць. Місяці не перетікають один в одного. */
 function planFor(cat, ym){
-  const base = Number(cat.plan) || 0;
-  if(!cat.payMonth) return base;
-  return cat.payMonth === ym ? base : 0;
+  return Number(S.plans[planKey(cat.id, ym)]) || 0;
 }
-/** Місяці, у яких взагалі щось заплановано разово — щоб графік дотягнувся туди. */
+/** Останній місяць, на який узагалі щось заплановано. */
 function latestPlannedMonth(){
   let last = ymNow();
-  S.cats.forEach(c => { if(c.payMonth && c.plan > 0 && c.payMonth > last) last = c.payMonth; });
+  for(const k in S.plans){
+    if(!(Number(S.plans[k]) > 0)) continue;
+    const m = k.slice(k.indexOf('|') + 1);
+    if(m > last) last = m;
+  }
   return last;
 }
 const groupById = id => S.groups.find(g => g.id === id);
@@ -1936,21 +2100,17 @@ function planBlock(kind){
         + '<button class="btn quiet needs-edit delg" data-del-group="'+esc(g.id)+'" '
           + 'title="Видалити групу">видалити</button>'
         + '<span class="gsum">'+eur(gplan)+' на місяць</span></div>'
-      + '<div class="planhead"><span>Стаття</span><span>Сума, €</span>'
-        + '<span>Коли надійде</span><span></span></div>'
+      + '<div class="planhead"><span>Стаття</span>'
+        + '<span>План на ' + ymLabelLong(ym).toLowerCase() + ', €</span><span></span></div>'
       + (cats.length ? '' : '<div class="note" style="padding:8px 0">'
           + 'У групі немає жодної статті — план ставиться на статтю. '
           + 'Додай підгрупу нижче, наприклад «'+esc(g.name)+'».</div>')
       + cats.map(c => {
-          const active = planFor(c, ym) > 0;
-          return '<div class="planrow'+(c.payMonth && !active ? ' dim' : '')+'">'
-            + '<div class="cname">'+esc(c.name)
-              + (c.payMonth ? '<span class="conly">лише '+ymLabelLong(c.payMonth)+'</span>' : '')
-              + '</div>'
+          const v = planFor(c, ym);
+          return '<div class="planrow'+(v > 0 ? '' : ' dim')+'">'
+            + '<div class="cname">'+esc(c.name)+'</div>'
             + '<input class="num-in needs-edit" type="text" inputmode="decimal" '
-              + 'data-plan="'+esc(c.id)+'" value="'+(c.plan||0)+'">'
-            + '<input class="needs-edit paym" type="month" data-paym="'+esc(c.id)+'" '
-              + 'title="Порожньо — щомісяця" value="'+(c.payMonth||'')+'">'
+              + 'data-plan="'+esc(c.id)+'" value="'+v+'">'
             + '<button class="btn quiet needs-edit" data-del-cat="'+esc(c.id)+'">×</button>'
             + '</div>';
         }).join('')
@@ -1965,6 +2125,14 @@ function planBlock(kind){
 function renderPlans(){
   $('#planExp').innerHTML = planBlock('expense');
   $('#planInc').innerHTML = planBlock('income');
+  const prev = ymAdd(S.month, -1);
+  [['#planExpHint','expense'], ['#planIncHint','income']].forEach(([sel, kind]) => {
+    const sum = groupsOf(kind).reduce((a,g) => a + catsOf(g.id)
+      .reduce((b,c) => b + (Number(S.plans[planKey(c.id, prev)]) || 0), 0), 0);
+    $(sel).textContent = sum > 0
+      ? ymLabelLong(prev) + ': ' + eur(sum)
+      : 'у ' + ymLabelLong(prev).toLowerCase() + ' планів не було';
+  });
 }
 
 function renderGoals(){
@@ -2008,6 +2176,109 @@ function renderGoals(){
           +'<td class="r"><button class="btn quiet needs-edit" data-del-goal="'+esc(g.id)+'">видалити</button></td></tr>';
       }).join('')
     + '</tbody></table></div>';
+}
+
+/* ── завдання ── */
+const WEEK = ['Неділя','Понеділок','Вівторок','Середа','Четвер','П\u2019ятниця','Субота'];
+function dayLabel(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.getDate() + ' ' + MONTHS_IN[d.getMonth()] + ', ' + WEEK[d.getDay()].toLowerCase();
+}
+function tasksOf(ym){
+  return S.tasks.filter(t => (t.date || '').slice(0,7) === ym)
+    .sort((a,b) => (a.date + (a.time || '99:99')).localeCompare(b.date + (b.time || '99:99')));
+}
+/** Посилання, яке відкриває Google Календар із заповненою подією. */
+function gcalLink(t){
+  const clean = x => x.replace(/[-:]/g, '');
+  let dates;
+  if(t.time){
+    const start = new Date(t.date + 'T' + t.time + ':00');
+    const end = new Date(start.getTime() + 60*60*1000);
+    const f = d => clean(d.toISOString().slice(0,19)) + 'Z';
+    dates = f(start) + '/' + f(end);
+  } else {
+    const d = new Date(t.date + 'T00:00:00');
+    const next = new Date(d.getTime() + 24*60*60*1000);
+    dates = clean(t.date) + '/' + clean(next.toISOString().slice(0,10));
+  }
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent(t.title)
+    + '&dates=' + dates
+    + (t.note ? '&details=' + encodeURIComponent(t.note) : '');
+}
+/** Файл .ics з усіма завданнями місяця — відкривається будь-яким календарем. */
+function icsFor(list, ym){
+  const clean = x => x.replace(/[-:]/g, '');
+  const esc2 = x => String(x).replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+  const stamp = clean(new Date().toISOString().slice(0,19)) + 'Z';
+  const body = list.map((t, i) => {
+    let head;
+    if(t.time){
+      const st = new Date(t.date + 'T' + t.time + ':00');
+      const en = new Date(st.getTime() + 60*60*1000);
+      const f = d => clean(d.toISOString().slice(0,19)) + 'Z';
+      head = 'DTSTART:' + f(st) + '\r\nDTEND:' + f(en);
+    } else {
+      const next = new Date(new Date(t.date + 'T00:00:00').getTime() + 24*60*60*1000);
+      head = 'DTSTART;VALUE=DATE:' + clean(t.date)
+           + '\r\nDTEND;VALUE=DATE:' + clean(next.toISOString().slice(0,10));
+    }
+    return ['BEGIN:VEVENT',
+      'UID:fb-' + ym + '-' + i + '-' + Math.random().toString(36).slice(2) + '@budget',
+      'DTSTAMP:' + stamp, head,
+      'SUMMARY:' + esc2(t.title) + (t.done ? ' \u2713' : ''),
+      t.note ? 'DESCRIPTION:' + esc2(t.note) : '',
+      'END:VEVENT'].filter(Boolean).join('\r\n');
+  }).join('\r\n');
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Family Budget//UA',
+          'CALSCALE:GREGORIAN', body, 'END:VCALENDAR'].join('\r\n');
+}
+
+function renderTasks(){
+  const ym = S.month;
+  $('#kLabel').textContent = ymLabelLong(ym);
+  const kp = $('#kPick'); if(kp && document.activeElement !== kp) kp.value = ym;
+  const tdEl = $('#tkDate');
+  if(tdEl && !tdEl.value) tdEl.value = ym + '-' + String(new Date().getDate()).padStart(2,'0');
+
+  const list = tasksOf(ym);
+  const done = list.filter(t => t.done).length;
+  $('#taskSub').textContent = ymLabelLong(ym);
+  $('#taskCount').textContent = list.length
+    ? 'виконано ' + done + ' з ' + list.length : '';
+
+  const box = $('#taskList');
+  if(!list.length){
+    box.innerHTML = '<div class="empty">На цей місяць завдань немає. '
+      + 'Додай перше у формі вище.</div>';
+    return;
+  }
+  const today = new Date().toISOString().slice(0,10);
+  let html = '<div class="tasks">', day = '';
+  list.forEach(t => {
+    if(t.date !== day){
+      day = t.date;
+      html += '<div class="daysep">' + dayLabel(t.date) + '</div>';
+    }
+    const late = !t.done && t.date < today;
+    html += '<div class="task' + (t.done ? ' done' : '') + (late ? ' late' : '') + '">'
+      + '<button class="chk needs-edit" data-task="' + esc(t.id) + '" '
+        + 'aria-pressed="' + (t.done ? 'true' : 'false') + '" '
+        + 'title="' + (t.done ? 'Зняти позначку' : 'Позначити виконаним') + '">'
+        + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6"/></svg>'
+        + '</button>'
+      + '<div class="when">' + (t.time || 'весь день') + '</div>'
+      + '<div class="what">' + esc(t.title)
+        + (late ? '<small>прострочено</small>' : '') + '</div>'
+      + '<div class="tools">'
+        + '<a class="btn quiet" href="' + esc(gcalLink(t)) + '" target="_blank" rel="noopener" '
+          + 'title="Відкрити в Google Календарі">'
+          + '<span class="cal-full">календар</span><span class="cal-short">📅</span></a>'
+        + '<button class="btn quiet needs-edit" data-del-task="' + esc(t.id) + '">×</button>'
+      + '</div></div>';
+  });
+  box.innerHTML = html + '</div>';
 }
 
 function renderSettings(){
@@ -2055,7 +2326,7 @@ function renderAll(){
     rafPending = false;
     try{
       if(!S.month) S.month = ymNow();
-      renderOverview(); renderTx(); renderPlans(); renderGoals(); renderSettings();
+      renderOverview(); renderTx(); renderPlans(); renderGoals(); renderTasks(); renderSettings();
     }catch(e){ console.error('render', e); }
   });
 }
@@ -2073,10 +2344,10 @@ $$('.tab').forEach(b => b.addEventListener('click', () => switchTab(b.id)));
 
 /* ── вибір місяця (спільний для «Огляду» і «Планів») ── */
 function setMonth(ym){ S.month = ym; renderAll(); }
-['#mPrev','#pPrev'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymAdd(S.month, -1))));
-['#mNext','#pNext'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymAdd(S.month, 1))));
-['#mNow','#pNow'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymNow())));
-['#mPick','#pPick'].forEach(sel => $(sel).addEventListener('change', e => {
+['#mPrev','#pPrev','#kPrev'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymAdd(S.month, -1))));
+['#mNext','#pNext','#kNext'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymAdd(S.month, 1))));
+['#mNow','#pNow','#kNow'].forEach(sel => $(sel).addEventListener('click', () => setMonth(ymNow())));
+['#mPick','#pPick','#kPick'].forEach(sel => $(sel).addEventListener('change', e => {
   if(e.target.value) setMonth(e.target.value);
 }));
 
@@ -2136,6 +2407,21 @@ document.addEventListener('click', async ev => {
     catch(e){ t.disabled = false; alert(e.message); }
     return;
   }
+  if(t.dataset.task){
+    const task = S.tasks.find(x => x.id === t.dataset.task);
+    if(!task) return;
+    t.disabled = true;
+    try{ await toggleTask(task.id, !task.done); }
+    catch(e){ alert(e.message); }
+    finally{ t.disabled = false; }
+    return;
+  }
+  if(t.dataset.delTask){
+    const task = S.tasks.find(x => x.id === t.dataset.delTask);
+    if(!task || !confirm('Видалити завдання «' + task.title + '»?')) return;
+    try{ await removeRow('tasks', task.id); }catch(e){ alert(e.message); }
+    return;
+  }
   if(t.dataset.delGoal){
     try{ await removeRow('goals', t.dataset.delGoal); }catch(e){ alert(e.message); }
     return;
@@ -2164,6 +2450,25 @@ document.addEventListener('click', async ev => {
     try{ await removeRow('groups', g.id); }catch(e){ alert(e.message); }
     return;
   }
+  if(t.dataset.copy){
+    const kind = t.dataset.copy;
+    const prev = ymAdd(S.month, -1);
+    const has = groupsOf(kind).some(g => catsOf(g.id)
+      .some(c => (Number(S.plans[planKey(c.id, prev)]) || 0) > 0));
+    if(!has){ alert('У ' + ymLabelLong(prev).toLowerCase() + ' планів немає — копіювати нічого.'); return; }
+    const already = groupsOf(kind).some(g => catsOf(g.id) .some(c => planFor(c, S.month) > 0));
+    const msg = 'Скопіювати плани з ' + ymLabelLong(prev).toLowerCase()
+      + ' у ' + ymLabelLong(S.month).toLowerCase() + '?'
+      + (already ? '\n\nУже заповнені суми цього місяця будуть перезаписані.' : '');
+    if(!confirm(msg)) return;
+    t.disabled = true;
+    try{
+      const n = await copyPlansFrom(prev, S.month, kind);
+      flash('Скопійовано статей: ' + n);
+    }catch(e){ alert(e.message); }
+    finally{ t.disabled = false; }
+    return;
+  }
   if(t.dataset.renGroup){
     const g = groupById(t.dataset.renGroup);
     if(!g) return;
@@ -2190,13 +2495,7 @@ document.addEventListener('change', async ev => {
   if(el.dataset && el.dataset.plan){
     const n = num(el.value);
     if(isNaN(n) || n < 0){ el.value = 0; alert('Це має бути число. Кома і крапка — обидві годяться.'); return; }
-    try{ await saveCat(el.dataset.plan, { plan: n }); }
-    catch(e){ alert(e.message); }
-    return;
-  }
-  if(el.dataset && el.dataset.paym){
-    const v = String(el.value || '').trim();
-    try{ await saveCat(el.dataset.paym, { pay_month: v === '' ? null : v }); }
+    try{ await savePlan(el.dataset.plan, S.month, n); }
     catch(e){ alert(e.message); }
     return;
   }
@@ -2247,6 +2546,30 @@ $('#hhRotate').addEventListener('click', async () => {
   renderSettings();
 });
 $('#signOut').addEventListener('click', async () => { await sb.auth.signOut(); location.reload(); });
+
+$('#taskForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const title = $('#tkTitle').value.trim();
+  const date = $('#tkDate').value;
+  if(!title || !date) return;
+  try{
+    await addTask({ title, date, time: $('#tkTime').value || '' });
+    $('#tkTitle').value = ''; $('#tkTime').value = '';
+    if(date.slice(0,7) !== S.month) setMonth(date.slice(0,7));
+    flash('Завдання додано');
+  }catch(e){ alert(e.message); }
+});
+
+$('#icsMonth').addEventListener('click', () => {
+  const list = tasksOf(S.month);
+  if(!list.length){ alert('На цей місяць завдань немає.'); return; }
+  const blob = new Blob([icsFor(list, S.month)], { type:'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'zavdannya-' + S.month + '.ics';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+});
 
 $('#goalForm').addEventListener('submit', async ev => {
   ev.preventDefault();
